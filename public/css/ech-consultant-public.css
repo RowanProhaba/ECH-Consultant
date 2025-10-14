@@ -2,3 +2,217 @@
  * All of the CSS for your public-facing functionality should be
  * included in this file.
  */
+
+ .code_error {
+  color: red;
+}
+
+
+
+
+/***************** MAIN FORM *****************/
+.echc_form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.echc_form a{
+  text-decoration: underline !important;
+}
+.echc_form ::placeholder, select, select option, select option:checked {
+  font-family: 'YuanTi', sans-serif;
+  font-size: 17px;
+  line-height: 18px;
+}
+.echc_form option:disabled {
+  color: #ddd;
+}
+.echc_formMsg {
+  color: #0170B9;
+  text-align: center;
+  font-weight: 600;
+  font-size: 20px;
+  line-height: 1.2em;
+}
+
+.hidden_checkbox { display: none; }
+
+.form_row {
+  flex-basis: 100%;
+  box-sizing: border-box;
+}
+
+div[data-ech-field="last_name"],
+div[data-ech-field="first_name"],
+div[data-ech-field="tel"],
+div[data-ech-field="email"]{
+  flex-basis: calc( (100% - 30px) / 4);
+}
+div[data-ech-field="booking_date"],
+div[data-ech-field="booking_time"]{
+  flex-basis: calc( (100% - 10px) / 2);
+}
+div[data-ech-field="info_remark"] .redWord{
+  font-size: 14px;
+}
+div[data-ech-field="quota"] h6{
+  margin-bottom: 10px;
+  text-align: center;
+}
+.checkbox_label input[type=checkbox], .radio_label input[type=radio] {
+  margin-right: 5px; 
+}
+.radio_label {
+  margin-right: 15px; 
+}
+.form_row div p {
+  margin-bottom: 0px;
+}
+.form_row .redWord, .lfg_formMsg {
+  color: red;
+}
+
+
+input[type=text], select, input[type=email], input[type=number] {
+  width: 100%;
+  height: 50px;
+  box-sizing: border-box;
+}
+
+textarea {
+  padding-left: 20px;
+}
+
+small {
+  display: block;
+  font-family: 'YuanTi', sans-serif;
+  font-size: 13px;
+  color: #727171;
+}
+
+.echc_form #submitBtn {
+  background: #0170B9;
+  color: #fff;
+  font-family: 'YuanTi', sans-serif;
+  width: 100%;
+  font-size: 17px;
+  padding: 10px 0px;
+}
+#submitBtn:hover { background: #629ac7; }
+
+.ui-datepicker td span, .ui-datepicker td a {
+  font-size: inherit;
+}
+.ui-timepicker-wrapper {
+  width: 300px !important;
+  max-height: 60vh !important;
+}
+.ui-timepicker-list li{
+  text-align: center;
+}
+
+/*** checkbox dropdown list ***/
+.lfg_checkbox_dropdown {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 50px;
+  position: relative;
+  margin: 0 auto;
+  user-select: none;
+  border: 1px solid #eaeaea;
+  border-radius: 2px;
+  background: #fafafa;
+  padding:.75em .2em .75em 1em;
+  font-family: 'YuanTi', sans-serif;
+  font-size: 17px;
+}
+
+/* Display CSS arrow to the right of the dropdown text */
+.lfg_checkbox_dropdown:after {
+  content:'';
+  height: 0;
+  position: absolute;
+  width: 0;
+  border: 6px solid transparent;
+  border-top-color: #000;
+  top: 50%;
+  right: 4px;
+  margin-top: -3px;
+}
+
+/* Reverse the CSS arrow when the dropdown is active */
+.lfg_checkbox_dropdown.lfg_is_active:after {
+  border-bottom-color: #000;
+  border-top-color: #fff;
+  margin-top: -9px;
+}
+
+.lfg_checkbox_dropdown_list {
+  list-style: none;
+  margin: 0;
+  padding:0 10px !important;
+  position: absolute;
+  bottom: 80%; /* align the dropdown right below the dropdown text */
+  border: inherit;
+  border-top: none;
+  left: -1px; /* align the dropdown to the left */
+  right: -1px; /* align the dropdown to the right */
+  opacity: 0; /* hide the dropdown */
+  background: #fff;
+  transition: opacity 0.4s ease-in-out;
+  height: 200px;
+  overflow: scroll;
+  overflow-x: hidden;
+  pointer-events: none; /* avoid mouse click events inside the dropdown */
+  z-index: 999;
+}
+.lfg_is_active .lfg_checkbox_dropdown_list {
+  opacity: 1; /* display the dropdown */
+  pointer-events: auto; /* make sure that the user still can select checkboxes */
+}
+
+.lfg_checkbox_dropdown_list li label {
+  display: block;
+  border-bottom: 1px solid silver;
+  padding: 5px;
+  line-height: 1.5;
+  transition: all 0.2s ease-out;
+}
+
+.lfg_checkbox_dropdown_list li label:hover {
+  background-color: #fafafa;
+  color: #727171;
+}
+
+/*** (END) checkbox dropdown list ***/
+
+
+
+
+
+
+
+
+@media(max-width: 768px) {
+  .form_row {
+      flex-basis: 100% !important;
+  }
+  .lfg_formMsg { font-size: 15px; line-height: 23px; }
+
+  div.form_row[data-ech-field="last_name"], div.form_row[data-ech-field="first_name"]{
+      flex-basis: calc( 50% - 5px) !important;
+  }
+}
+
+
+@media(max-width: 600px) {
+  .radio_label {
+      display: flex;
+      flex-wrap: nowrap;
+      width: 100%;
+      align-items: center;
+  }
+}
+
+/***************** (END)MAIN FORM *****************/

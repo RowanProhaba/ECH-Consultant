@@ -20,84 +20,133 @@
  * @subpackage Ech_Consultant/admin
  * @author     Rowan Chang <rowanchang@prohaba.com>
  */
-class Ech_Consultant_Admin {
+class Ech_Consultant_Admin
+{
+    /**
+     * The ID of this plugin.
+     *
+     * @since    1.0.0
+     * @access   private
+     * @var      string    $plugin_name    The ID of this plugin.
+     */
+    private $plugin_name;
 
-	/**
-	 * The ID of this plugin.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 * @var      string    $plugin_name    The ID of this plugin.
-	 */
-	private $plugin_name;
+    /**
+     * The version of this plugin.
+     *
+     * @since    1.0.0
+     * @access   private
+     * @var      string    $version    The current version of this plugin.
+     */
+    private $version;
 
-	/**
-	 * The version of this plugin.
-	 *
-	 * @since    1.0.0
-	 * @access   private
-	 * @var      string    $version    The current version of this plugin.
-	 */
-	private $version;
+    /**
+     * Initialize the class and set its properties.
+     *
+     * @since    1.0.0
+     * @param      string    $plugin_name       The name of this plugin.
+     * @param      string    $version    The version of this plugin.
+     */
+    public function __construct($plugin_name, $version)
+    {
 
-	/**
-	 * Initialize the class and set its properties.
-	 *
-	 * @since    1.0.0
-	 * @param      string    $plugin_name       The name of this plugin.
-	 * @param      string    $version    The version of this plugin.
-	 */
-	public function __construct( $plugin_name, $version ) {
+        $this->plugin_name = $plugin_name;
+        $this->version = $version;
 
-		$this->plugin_name = $plugin_name;
-		$this->version = $version;
+    }
 
-	}
+    /**
+     * Register the stylesheets for the admin area.
+     *
+     * @since    1.0.0
+     */
+    public function enqueue_styles()
+    {
 
-	/**
-	 * Register the stylesheets for the admin area.
-	 *
-	 * @since    1.0.0
-	 */
-	public function enqueue_styles() {
+        /**
+         * This function is provided for demonstration purposes only.
+         *
+         * An instance of this class should be passed to the run() function
+         * defined in Ech_Consultant_Loader as all of the hooks are defined
+         * in that particular class.
+         *
+         * The Ech_Consultant_Loader will then create the relationship
+         * between the defined hooks and the functions defined in this
+         * class.
+         */
 
-		/**
-		 * This function is provided for demonstration purposes only.
-		 *
-		 * An instance of this class should be passed to the run() function
-		 * defined in Ech_Consultant_Loader as all of the hooks are defined
-		 * in that particular class.
-		 *
-		 * The Ech_Consultant_Loader will then create the relationship
-		 * between the defined hooks and the functions defined in this
-		 * class.
-		 */
+        if ((isset($_GET['page']) && $_GET['page'] == 'ech_consultant_settings')) {
+            wp_enqueue_style($this->plugin_name, plugin_dir_url(__FILE__) . 'css/ech-consultant-admin.css', [], $this->version, 'all');
+        }
 
-		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/ech-consultant-admin.css', array(), $this->version, 'all' );
+    }
 
-	}
+    /**
+     * Register the JavaScript for the admin area.
+     *
+     * @since    1.0.0
+     */
+    public function enqueue_scripts()
+    {
 
-	/**
-	 * Register the JavaScript for the admin area.
-	 *
-	 * @since    1.0.0
-	 */
-	public function enqueue_scripts() {
+        /**
+         * This function is provided for demonstration purposes only.
+         *
+         * An instance of this class should be passed to the run() function
+         * defined in Ech_Consultant_Loader as all of the hooks are defined
+         * in that particular class.
+         *
+         * The Ech_Consultant_Loader will then create the relationship
+         * between the defined hooks and the functions defined in this
+         * class.
+         */
 
-		/**
-		 * This function is provided for demonstration purposes only.
-		 *
-		 * An instance of this class should be passed to the run() function
-		 * defined in Ech_Consultant_Loader as all of the hooks are defined
-		 * in that particular class.
-		 *
-		 * The Ech_Consultant_Loader will then create the relationship
-		 * between the defined hooks and the functions defined in this
-		 * class.
-		 */
+        wp_enqueue_script($this->plugin_name, plugin_dir_url(__FILE__) . 'js/ech-consultant-admin.js', [ 'jquery' ], $this->version, false);
 
-		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/ech-consultant-admin.js', array( 'jquery' ), $this->version, false );
+    }
 
-	}
+    /**
+   * ^^^ Add ECH Consultant Admin menu
+   *
+   * @since    1.0.0
+   */
+    public function echc_admin_menu()
+    {
+        // Main Menu
+        add_menu_page(
+            'ECH Consultant',
+            'ECH Consultant',
+            'manage_options',
+            'ech_consultant_settings',
+            [ $this, 'ech_consultant_admin_page' ],
+            'dashicons-businessperson',
+            110,
+        );
+    }
+
+    // return view
+    public function ech_consultant_admin_page()
+    {
+        require_once('partials/ech-consultant-admin-display.php');
+    }
+
+    public function reg_ech_consultant_management()
+    {
+        // register_setting( 'echc_gen_settings', 'echc_submitBtn_color');
+        // register_setting( 'echc_gen_settings', 'echc_submitBtn_text_color');
+        // register_setting( 'echc_gen_settings', 'echc_submitBtn_hoverColor');
+        // register_setting( 'echc_gen_settings', 'echc_submitBtn_text_hoverColor');
+        register_setting(
+            'echc_gen_settings',
+            'echc_shop_area',
+            [
+                'type' => 'array',
+                'default' => [],
+            ],
+        );
+    }
+
+
+
 
 }
