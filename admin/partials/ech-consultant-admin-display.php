@@ -78,11 +78,11 @@
         do_settings_sections('echc_gen_settings');
         $echc_shop_area = get_option('echc_shop_area');
       ?>
-      <h2>General</h2>
+      <!-- <h2>General</h2>
       <div class="form_row">
           <label>地區 : </label>
           <input type="checkbox" name="echc_shop_area[]" value="<?= get_option('echc_shop_area')?>" id="echc_shop_area">
-      </div>
+      </div> -->
     </form>
   </div>
 </div>
