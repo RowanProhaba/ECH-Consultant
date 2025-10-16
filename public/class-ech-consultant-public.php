@@ -296,8 +296,8 @@ class Ech_Consultant_Public
         $output .= '
 			<div class="form_row" data-ech-field="consultant">
 				<select class="form-control" name="consultant" id="consultant" required>
-						<option disabled="" selected="" value="">'. $this->form_echolang(['*Please Select Consultant','*請選擇顧問','*请选择顾问']) .'</option>
-						<option disabled="" value="">'. $this->form_echolang(['Please Select Area First','請先選擇地區','请先选择地区']) .'</option>
+						<option disabled="" selected="" value="">' . $this->form_echolang(['*Please Select Consultant','*請選擇顧問','*请选择顾问']) . '</option>
+						<option disabled="" value="">' . $this->form_echolang(['Please Select Area First','請先選擇地區','请先选择地区']) . '</option>
 				</select>
 			</div>';
         //**** (END) Consultant Options
@@ -314,36 +314,93 @@ class Ech_Consultant_Public
         $output .= '<div class="consultant-container"></div>';
         return $output;
     } // function display_ech_consultant_form()
-		public function get_ec_consultants() {
-			$shop = strtolower($_POST['shop_area_code']);
-			$args = [
-					'post_type' => 'ec-consultant',
-					'tax_query' => [
-							[
-									'taxonomy' => 'consultant-category',
-									'field'    => 'slug',
-									'terms'    => $shop,
-							],
-					],
-					'posts_per_page' => -1,
-			];
-	
-			$query = new WP_Query($args);
-			$output = '<option disabled="" selected="" value="">*請選擇顧問</option>';
-	
-			if ($query->have_posts()) {
-					foreach ($query->posts as $post) {
-							$output .= '<option value="consultant-' . $post->ID . '">' . esc_html($post->post_title) . '</option>';
-					}
-					wp_reset_postdata();
-			} else {
-					$output = '<option value="" disabled>'.$this->form_echolang(['*Please reselect Area','*請重新選擇地區','*请重新选择地区']).'</option>';
-			}
-	
-			echo $output;
-			wp_die();
-	}
-	
+    public function get_ec_consultants()
+    {
+        $shop = isset($_POST['shop_area_code']) ? sanitize_text_field(strtolower($_POST['shop_area_code'])) : '';
+
+        if (empty($shop)) {
+            wp_send_json_error(['message' => '缺少地區代碼']);
+        }
+
+        $args = [
+            'post_type' => 'ec-consultant',
+            'tax_query' => [
+                [
+                    'taxonomy' => 'consultant-category',
+                    'field'    => 'slug',
+                    'terms'    => $shop,
+                ],
+            ],
+            'posts_per_page' => -1,
+            'no_found_rows' => true,
+            'fields' => 'ids'
+        ];
+
+        $ids = get_posts($args);
+        $consultants = [];
+        if(!empty($ids)){
+            foreach ($ids as $consultant_id) {
+                $fields = get_fields($consultant_id);
+                $name = $this->form_echolang([$fields['name_en'],$fields['name_zh'],$fields['name_cn']]);
+
+                $consultants[] = [
+                    'id'   => $consultant_id,
+                    'name' => $name,
+                ];
+            }
+        }
+
+        if (empty($consultants)) {
+            wp_send_json_error([
+                'message' => $this->form_echolang(['Please reselect Area','請重新選擇地區','请重新选择地区']),
+            ]);
+        }
+
+        wp_send_json_success(['consultants' => $consultants]);
+    }
+
+
+    public function get_consultant_info()
+    {
+        $consultant_id = intval($_POST['consultant_id']);
+        $fields = get_fields($consultant_id);
+
+        $name = $this->form_echolang([$fields['name_en'],$fields['name_zh'],$fields['name_cn']]);
+        $description = $this->form_echolang([$fields['description_en'],$fields['description_zh'],$fields['description_cn']]);
+
+        $profile_picture = $fields['profile_picture']['sizes']['medium_large'] ?? '';
+
+        $taxonomy = 'consultant-category';
+        $terms = wp_get_post_terms($consultant_id, $taxonomy);
+        $area_ary = [];
+        if (!is_wp_error($terms) && !empty($terms)) {
+            foreach ($terms as $term) {
+                $term_fields = get_fields('consultant-category_' . $term->term_id);
+                $area_name = $this->form_echolang([$term_fields['name_en'], $term_fields['name_zh'], $term_fields['name_cn']]);
+                $area_ary[] = $area_name;
+            }
+        }
+        $output = '';
+
+        $output .= '<div class="consultant-info">';
+        if ($profile_picture) {
+            $output .= '<div class="profile-picture"><img src="' . esc_url($profile_picture) . '" alt="' . esc_attr($name) . '"></div>';
+        }
+        $output .= '<div class="consultant-detail">';
+        $output .= '<div class="">' . $name . '</div>';
+        $output .= '<div class="">' . $description . '</div>';
+        if (!empty($area_ary)) {
+            $output .= '<div class="consultant-area">'. $this->form_echolang(['Area:','地區:','地区:']) .':' . implode(', ', array_map('esc_html', $area_ary)) . '</div>';
+        }
+        $output .= '</div>';
+        $output .= '</div>';
+
+
+        echo $output;
+        wp_die();
+    }
+
+
     public function echc_recaptVerify()
     {
         $crData = [];

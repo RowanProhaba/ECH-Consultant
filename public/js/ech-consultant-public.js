@@ -12,18 +12,46 @@
 		});
 		jQuery('#ui-datepicker-div').addClass('skiptranslate notranslate');
 		/*********** (END) Datepicker & Timepicker ***********/
-		jQuery('.echc_form div[data-ech-field="shop"] select[name="shop"], .echc_form div[data-ech-field="shop"] input[name="shop"]').on('change', function () {
-			const _shop_area_code = jQuery(this).val(),
-				ajaxurl = jQuery(this).parents('.echc_form').data("ajaxurl");
 
-				const data = {
-					'action': 'get_ec_consultants',
-					'shop_area_code': _shop_area_code
+		jQuery('.echc_form div[data-ech-field="shop"] select[name="shop"], .echc_form div[data-ech-field="shop"] input[name="shop"]').on('change', function () {
+			const thisForm = jQuery(this).parents('.echc_form'),
+				ajaxurl = jQuery(this).parents('.echc_form').data("ajaxurl"),
+				shop_area_code = jQuery(this).val();
+			jQuery(thisForm).find('select[name="consultant"]').html('<option disabled="" selected="" value="">載入中...</option>');
+
+			const data = {
+				'action': 'get_ec_consultants',
+				'shop_area_code': shop_area_code
+			}
+			$.post(ajaxurl, data, function (res) {
+				jQuery('.consultant-container').empty();
+				const consultantSelect = jQuery('.echc_form').find('select[name="consultant"]');
+				jQuery(consultantSelect).empty();
+
+				if (res.success) {
+					jQuery(consultantSelect).append('<option disabled selected>*請選擇顧問</option>');
+					res.data.consultants.forEach(item => {
+						jQuery(consultantSelect).append(`<option value="${item.id}">${item.name}</option>`);
+					});
+				} else {
+					jQuery(consultantSelect).append(`<option disabled selected>${res.data?.message || '沒有符合的顧問'}</option>`);
 				}
-				$.post(ajaxurl, data, function (res) {
-					console.log(res);
-					jQuery('.echc_form').find('select[name="consultant"]').html(res);
-				});
+			});
+		});
+
+		jQuery('.echc_form div[data-ech-field="consultant"] select[name="consultant"]').on('change', function () {
+			const thisForm = jQuery(this).parents('.echc_form'),
+				ajaxurl = jQuery(this).parents('.echc_form').data("ajaxurl"),
+				consultantId = jQuery(this).val();
+			jQuery('.consultant-container').html('載入中...');
+
+			const data = {
+				'action': 'get_consultant_info',
+				'consultant_id': consultantId
+			}
+			$.post(ajaxurl, data, function (res) {
+				jQuery('.consultant-container').html(res);
+			});
 		});
 
 		/*********** Form Submit ***********/
