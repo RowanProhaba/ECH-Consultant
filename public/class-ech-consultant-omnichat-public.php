@@ -38,23 +38,10 @@ class Ech_consultant_Omnichat_Public
     public function consultant_OmnichatSendMsg() {
         $domain = get_site_url();
         $data = array();
-        $epayData = array(
-                        "username" => $_POST['name'], 
-                        "phone" => $_POST['phone'], 
-                        "email" => $_POST['email'], 
-                        "booking_date" => $_POST['booking_date'],
-                        "booking_time" => $_POST['booking_time'],
-                        "booking_item" => $_POST['booking_item'],
-                        "booking_location"=>$_POST['booking_location'],    
-                        "website_url" => $_POST['website_url'],
-                        "epay_refcode" => $_POST['epayRefCode']
-                    );
-        // $epayData = urlencode(json_encode($epayData, JSON_UNESCAPED_SLASHES));
-        $epayData = $this->encrypted_epay($epayData);
 
         $data['trackId'] = $_POST['wati_msg'];
         $data['platform'] = "whatsapp";
-        $data['channelId'] = get_option( 'ech_consultant_brand_whatsapp' );
+        $data['channelId'] = get_option( 'ech_lfg_brand_whatsapp' );
         $data['to'] = $_POST['phone'];
         $data['tags'] = [$_POST['wati_msg']];
 

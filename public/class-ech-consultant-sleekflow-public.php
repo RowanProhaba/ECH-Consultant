@@ -76,7 +76,7 @@ class Ech_consultant_Sleekflow_Public
 
         $data = array();
         $data['channel'] = "whatsappcloudapi";
-        $data['from'] = get_option( 'ech_consultant_brand_whatsapp' );
+        $data['from'] = get_option( 'ech_lfg_brand_whatsapp' );
         $data['to'] = $phone;
         $data['messageType'] = "template";
         $components = [];

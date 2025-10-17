@@ -3,93 +3,91 @@
 
 	$(function () {
 
-		/*********** Datepicker & Timepicker ***********/
-		jQuery('.echc_timepicker').timepicker({ minTime: '11:00am', maxTime: '7:30pm', step: 15 });
-		jQuery(".echc_datepicker").datepicker({
+		/*********** 初始化：Timepicker & Datepicker ***********/
+		$('.echc_timepicker').timepicker({ minTime: '11:00am', maxTime: '7:30pm', step: 15 });
+		$('.echc_datepicker').datepicker({
 			beforeShowDay: nosunday,
 			dateFormat: 'yy-mm-dd',
 			minDate: 1 // T+1
 		});
-		jQuery('#ui-datepicker-div').addClass('skiptranslate notranslate');
-		/*********** (END) Datepicker & Timepicker ***********/
+		$('#ui-datepicker-div').addClass('skiptranslate notranslate');
 
-		jQuery('.echc_form div[data-ech-field="shop"] select[name="shop"], .echc_form div[data-ech-field="shop"] input[name="shop"]').on('change', function () {
-			const thisForm = jQuery(this).parents('.echc_form'),
-				ajaxurl = jQuery(this).parents('.echc_form').data("ajaxurl"),
-				shop_area_code = jQuery(this).val();
-			jQuery(thisForm).find('select[name="consultant"]').html('<option disabled="" selected="" value="">載入中...</option>');
 
-			const data = {
-				'action': 'get_ec_consultants',
-				'shop_area_code': shop_area_code
-			}
-			$.post(ajaxurl, data, function (res) {
-				jQuery('.consultant-container').empty();
-				const consultantSelect = jQuery('.echc_form').find('select[name="consultant"]');
-				jQuery(consultantSelect).empty();
+		$('.echc_form').each(function () {
+			const $form = $(this);
+			const ajaxurl = $form.data('ajaxurl');
+			const $consultantSelect = $form.find('select[name="consultant"]');
+			const $container = $('.consultant-container');
 
-				if (res.success) {
-					jQuery(consultantSelect).append('<option disabled selected>*請選擇顧問</option>');
-					res.data.consultants.forEach(item => {
-						jQuery(consultantSelect).append(`<option value="${item.id}">${item.name}</option>`);
-					});
-				} else {
-					jQuery(consultantSelect).append(`<option disabled selected>${res.data?.message || '沒有符合的顧問'}</option>`);
-				}
+			$form.find('select[name="shop"], input[name="shop"]').on('change', function () {
+				const shopCode = $(this).val();
+				$consultantSelect.html('<option disabled selected>載入中...</option>');
+				$container.html('');
+
+				const data = {
+					action: 'get_ec_consultants',
+					shop_area_code: shopCode
+				};
+
+				$.post(ajaxurl, data, function (res) {
+					$consultantSelect.empty();
+					if (res.success && res.data.consultants.length > 0) {
+						$consultantSelect.append('<option disabled selected>*請選擇顧問</option>');
+						res.data.consultants.forEach(item => {
+							$consultantSelect.append(`<option value="${item.id}">${item.name}</option>`);
+						});
+					} else {
+						const msg = res.data?.message || '沒有符合的顧問';
+						$consultantSelect.append(`<option disabled selected>${msg}</option>`);
+					}
+				}).fail(function () {
+					$consultantSelect.html('<option disabled selected>載入失敗，請稍後再試。</option>');
+				});
 			});
+
+			$form.find('select[name="consultant"]').on('change', function () {
+				const consultantId = $(this).val();
+				// console.log(consultantId);
+				$container.html(`<div class="loading-spinner"></div>`);
+
+				const data = {
+					action: 'get_consultant_info',
+					consultant_id: consultantId
+				};
+
+				$.post(ajaxurl, data, function (res) {
+					// console.log(res);
+					$container.html(res);
+				}).fail(function () {
+					$container.html('<p class="error">載入失敗，請稍後再試。</p>');
+				});
+			});
+
 		});
 
-		jQuery('.echc_form div[data-ech-field="consultant"] select[name="consultant"]').on('change', function () {
-			const thisForm = jQuery(this).parents('.echc_form'),
-				ajaxurl = jQuery(this).parents('.echc_form').data("ajaxurl"),
-				consultantId = jQuery(this).val();
-			jQuery('.consultant-container').html('載入中...');
-
-			const data = {
-				'action': 'get_consultant_info',
-				'consultant_id': consultantId
-			}
-			$.post(ajaxurl, data, function (res) {
-				jQuery('.consultant-container').html(res);
-			});
-		});
-
-		/*********** Form Submit ***********/
-		jQuery('.echc_form').on("submit", function (e) {
+		/*********** .echc_form submit ***********/
+		$('.echc_form').on("submit", function (e) {
 			e.preventDefault();
-			const ip = jQuery(this).data("ip"),
-				ajaxurl = jQuery(this).data("ajaxurl"),
-				shop_count = jQuery(this).data("shop-count"),
-				_website_url = jQuery(this).data("url"),
-				_tel_prefix = jQuery(this).find("select[name='telPrefix']").val(),
-				_tel = jQuery(this).find("input[name='tel']").val(),
-				_booking_date = jQuery(this).find(".echc_datepicker").val(),
-				_booking_time = jQuery(this).find(".echc_timepicker").val();
+			const $form = $(this);
+			const ajaxurl = $form.data('ajaxurl');
+			const _tel_prefix = $form.find("select[name='telPrefix']").val();
+			const _tel = $form.find("input[name='tel']").val();
 
-			if (shop_count <= 3) {
-				const _shop_area_code = jQuery(this).find('input[name=shop]:checked').val();
-			} else {
-				const _shop_area_code = jQuery(this).find('select[name=shop]').val();
-			}
-
-			if ((_tel_prefix == "+852" && _tel.length != 8) || (_tel_prefix == "+853" && _tel.length != 8)) {
-				jQuery(this).find(".echc_formMsg").html("+852, +853電話必需8位數字(沒有空格)");
+			if ((_tel_prefix === "+852" && _tel.length !== 8) || (_tel_prefix === "+853" && _tel.length !== 8)) {
+				$form.find(".echc_formMsg").html("+852, +853電話必需8位數字(沒有空格)");
 				return false;
-			} else if ((_tel_prefix == "+86" && _tel.length != 11)) {
-				jQuery(this).find(".echc_formMsg").html("+86電話必需11位數字(沒有空格)");
+			} else if ((_tel_prefix === "+86" && _tel.length !== 11)) {
+				$form.find(".echc_formMsg").html("+86電話必需11位數字(沒有空格)");
 				return false;
-
 			} else {
-				jQuery(".ech_echc_form button[type=submit]").prop('disabled', true);
-				jQuery(this).find(".echc_formMsg").html("提交中...");
-				jQuery(".ech_echc_form button[type=submit]").html("提交中...");
+				$(".ech_echc_form button[type=submit]").prop('disabled', true);
+				$form.find(".echc_formMsg").html("提交中...");
+				$(".ech_echc_form button[type=submit]").html("提交中...");
 
-				// if apply reCAPTCHA
-				const applyRecapt = jQuery(this).data("apply-recapt");
-				const thisForm = jQuery(this);
+				const applyRecapt = $(this).data("apply-recapt");
 				if (applyRecapt == "1") {
-					const recaptSiteKey = jQuery(this).data("recapt-site-key");
-					const recaptScore = jQuery(this).data("recapt-score");
+					const recaptSiteKey = $(this).data("recapt-site-key");
+					const recaptScore = $(this).data("recapt-score");
 					grecaptcha.ready(function () {
 						grecaptcha.execute(recaptSiteKey, { action: 'submit' }).then(function (recapt_token) {
 							const recaptData = {
@@ -99,20 +97,65 @@
 							$.post(ajaxurl, recaptData, function (recapt_msg) {
 								const recaptObj = JSON.parse(recapt_msg);
 								if (recaptObj.success && recaptObj.score >= recaptScore) {
-									// if recapt success then send to MSP
-
+									// success, send to MSP
 								}
 							});
-						}); // grecaptcha.execute.then
-					}); //grecaptcha.ready
-
+						});
+					});
 				} else {
-					// if recapt is disabled, send to msp
-
+					// recaptcha disabled
 				}
-			}//_tel_prefix
-		}); // onclick
-		/*********** (END) Form Submit ***********/
-	});
+			}
+		});
+
+		function initConsultantList($form, shopCode) {
+			const ajaxurl = $form.data('ajaxurl');
+			const $consultantSelect = $form.find('select[name="consultant"]');
+			const $container = $('.consultant-container');
+
+			$consultantSelect.html('<option disabled selected>載入中...</option>');
+			$container.html('');
+
+			const data = {
+				action: 'get_ec_consultants',
+				shop_area_code: shopCode
+			};
+
+			$.post(ajaxurl, data, function (res) {
+				$consultantSelect.empty();
+				if (res.success && res.data.consultants.length > 0) {
+					$consultantSelect.append('<option disabled selected>*請選擇顧問</option>');
+					res.data.consultants.forEach(item => {
+						$consultantSelect.append(`<option value="${item.id}">${item.name}</option>`);
+					});
+				} else {
+					const msg = res.data?.message || '沒有符合的顧問';
+					$consultantSelect.append(`<option disabled selected>${msg}</option>`);
+				}
+			}).fail(function () {
+				$consultantSelect.html('<option disabled selected>載入失敗，請稍後再試。</option>');
+			});
+		}
+
+		function initConsultantInfo($form, consultantId) {
+			const ajaxurl = $form.data('ajaxurl');
+			const $container = $('.consultant-container');
+			$container.html(`<div class="loading-spinner"></div>`);
+
+			const data = {
+				action: 'get_consultant_info',
+				consultant_id: consultantId
+			};
+
+			$.post(ajaxurl, data, function (res) {
+				// console.log(res);
+				$container.html(res);
+				console.log($container.html(res));
+			}).fail(function () {
+				$container.html('<p class="error">載入失敗，請稍後再試。</p>');
+			});
+		}
+
+	}); // end $(function)
 
 })(jQuery);

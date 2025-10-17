@@ -98,7 +98,7 @@ class Ech_Consultant_Public
             'shop_code' => null,								// shop MSP token
             'shop_label' => $this->form_echolang(['*Select area','*請選擇地區','*请选择地区']),		// shop label
             'submit_label' => $this->form_echolang(['Submit','提交','提交']), 										//submit button label
-            'wati_msg' => null,
+            'msg_template' => get_option( 'echc_msg_template' ),
             'msg_header' => null,        				// parameters need to pass to omnichat, sleekflow, kommo api
             'msg_body' => null,									// parameters need to pass to omnichat, sleekflow, kommo api
             'msg_button' => null,								// parameters need to pass to omnichat, sleekflow, kommo api
@@ -264,12 +264,14 @@ class Ech_Consultant_Public
 
 
         //**** Location Options
+        $hide_shop_row = ($shop_count == 1) ? ' style="display:none;"' : '';
+
         $output .= '
-			<div class="form_row" data-ech-field="shop">';
+			<div class="form_row" data-ech-field="shop"' . $hide_shop_row . '>';
         if ($shop_count <= 3) {
             // radio
             if ($shop_count == 1) {
-                $output .= '<label class="radio_label" style="display: none;"><input type="radio" value="' . $paraArr['shop_code'][0] . '" data-shop-text-value="' . $paraArr['shop'][0] . '" name="shop" checked onclick="return false;">' . $paraArr['shop'][0] . '</label>';
+                $output .= '<label class="radio_label"><input type="radio" value="' . $paraArr['shop_code'][0] . '" data-shop-text-value="' . $paraArr['shop'][0] . '" name="shop" checked onclick="return false;">' . $paraArr['shop'][0] . '</label>';
             } else {
                 $output .= '<div>' . $shop_label . '</div>';
                 for ($i = 0; $i < $shop_count; $i++) {
@@ -294,12 +296,44 @@ class Ech_Consultant_Public
 
         //**** Consultant Options
         $output .= '
-			<div class="form_row" data-ech-field="consultant">
-				<select class="form-control" name="consultant" id="consultant" required>
-						<option disabled="" selected="" value="">' . $this->form_echolang(['*Please Select Consultant','*請選擇顧問','*请选择顾问']) . '</option>
-						<option disabled="" value="">' . $this->form_echolang(['Please Select Area First','請先選擇地區','请先选择地区']) . '</option>
-				</select>
-			</div>';
+        <div class="form_row" data-ech-field="consultant">
+            <select class="form-control" name="consultant" id="consultant" required>';
+        
+        if ($shop_count == 1) {
+            $shop_code = strtolower(trim($paraArr['shop_code'][0]));
+            $args = [
+                'post_type' => 'ec-consultant',
+                'tax_query' => [
+                    [
+                        'taxonomy' => 'consultant-category',
+                        'field'    => 'slug',
+                        'terms'    => $shop_code,
+                    ],
+                ],
+                'posts_per_page' => -1,
+                'no_found_rows'  => true,
+                'fields'         => 'ids',
+            ];
+            $consultant_ids = get_posts($args);
+            if (!empty($consultant_ids)) {
+                $output .= '<option disabled selected value="">' . $this->form_echolang(['*Please Select Consultant','*請選擇顧問','*请选择顾问']) . '</option>';
+                foreach ($consultant_ids as $cid) {
+                    $fields = get_fields($cid);
+                    $name = $this->form_echolang([$fields['name_en'], $fields['name_zh'], $fields['name_cn']]);
+                    $output .= '<option value="' . esc_attr($cid) . '">' . esc_html($name) . '</option>';
+                }
+            } else {
+                $output .= '<option disabled selected>' . $this->form_echolang(['No Consultants Found','沒有找到顧問','未找到顾问']) . '</option>';
+            }
+        }else {
+            $output .= '
+                <option disabled="" selected="" value="">' . $this->form_echolang(['*Please Select Consultant','*請選擇顧問','*请选择顾问']) . '</option>
+                <option disabled="" value="">' . $this->form_echolang(['Please Select Area First','請先選擇地區','请先选择地区']) . '</option>';
+        }
+        $output .= '
+            </select>
+        </div>';
+        
         //**** (END) Consultant Options
 
         //**** Submit
@@ -333,15 +367,17 @@ class Ech_Consultant_Public
             ],
             'posts_per_page' => -1,
             'no_found_rows' => true,
-            'fields' => 'ids'
+            'fields' => 'ids',
         ];
 
         $ids = get_posts($args);
         $consultants = [];
-        if(!empty($ids)){
+        if (!empty($ids)) {
             foreach ($ids as $consultant_id) {
-                $fields = get_fields($consultant_id);
-                $name = $this->form_echolang([$fields['name_en'],$fields['name_zh'],$fields['name_cn']]);
+                $name_en = get_post_meta($consultant_id, 'name_en', true);
+                $name_zh = get_post_meta($consultant_id, 'name_zh', true);
+                $name_cn = get_post_meta($consultant_id, 'name_cn', true);
+                $name = $this->form_echolang([$name_en, $name_zh, $name_cn]);
 
                 $consultants[] = [
                     'id'   => $consultant_id,
@@ -356,20 +392,30 @@ class Ech_Consultant_Public
             ]);
         }
 
-        wp_send_json_success(['consultants' => $consultants]);
+        wp_send_json_success([
+            'consultants' => $consultants,
+        ]);
     }
 
 
     public function get_consultant_info()
     {
         $consultant_id = intval($_POST['consultant_id']);
-        $fields = get_fields($consultant_id);
 
-        $name = $this->form_echolang([$fields['name_en'],$fields['name_zh'],$fields['name_cn']]);
-        $description = $this->form_echolang([$fields['description_en'],$fields['description_zh'],$fields['description_cn']]);
+        $name_en = get_post_meta($consultant_id, 'name_en', true);
+        $name_zh = get_post_meta($consultant_id, 'name_zh', true);
+        $name_cn = get_post_meta($consultant_id, 'name_cn', true);
+        $name = $this->form_echolang([$name_en, $name_zh, $name_cn]);
 
-        $profile_picture = $fields['profile_picture']['sizes']['medium_large'] ?? '';
+        $description_en = get_post_meta($consultant_id, 'description_en', true);
+        $description_zh = get_post_meta($consultant_id, 'description_zh', true);
+        $description_cn = get_post_meta($consultant_id, 'description_cn', true);
+        $description = $this->form_echolang([$description_en, $description_zh, $description_cn]);
 
+        $profile_picture = get_field('profile_picture', $consultant_id);
+        if(!empty($profile_picture)) {
+            $profile_picture = $profile_picture['sizes']['medium_large'] ?? '';
+        }
         $taxonomy = 'consultant-category';
         $terms = wp_get_post_terms($consultant_id, $taxonomy);
         $area_ary = [];
@@ -383,14 +429,16 @@ class Ech_Consultant_Public
         $output = '';
 
         $output .= '<div class="consultant-info">';
+        $default_picture = plugin_dir_url(dirname(__FILE__)) . 'public/img/circle-user-solid-full.svg';
         if ($profile_picture) {
-            $output .= '<div class="profile-picture"><img src="' . esc_url($profile_picture) . '" alt="' . esc_attr($name) . '"></div>';
+            $default_picture = $profile_picture;
         }
+        $output .= '<div class="profile-picture"><img src="' . $default_picture . '" alt="' . $name . '"></div>';
         $output .= '<div class="consultant-detail">';
-        $output .= '<div class="">' . $name . '</div>';
-        $output .= '<div class="">' . $description . '</div>';
+        $output .= '<div class="">' . $this->form_echolang(['Name','姓名','姓名']) . ': ' . $name . '</div>';
+        $output .= '<div class="">' . $this->form_echolang(['Profile','簡介','简介']) . ':<br>' . $description . '</div>';
         if (!empty($area_ary)) {
-            $output .= '<div class="consultant-area">'. $this->form_echolang(['Area:','地區:','地区:']) .':' . implode(', ', array_map('esc_html', $area_ary)) . '</div>';
+            $output .= '<div class="consultant-area">' . $this->form_echolang(['Area','地區','地区']) . ': ' . implode('、', array_map('esc_html', $area_ary)) . '</div>';
         }
         $output .= '</div>';
         $output .= '</div>';

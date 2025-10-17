@@ -68,21 +68,42 @@
               <label>Kommo Status ID: </label>
               <input type="number" name="ech_lfg_kommo_status_id" value="<?= htmlspecialchars(get_option('ech_lfg_kommo_status_id'))?>"/>
           </div>
-        <?php break;
+          <?php break;
 
-      endswitch;
-    ?>
-    <form method="post" id="lfg_gen_settings_form">
+endswitch;?>
+      <form method="post" id="lfg_gen_settings_form">
+        <?php
+          settings_fields('echc_gen_settings');
+          do_settings_sections('echc_gen_settings');
+          
+          ?>
+        <div class="form_row">
+            <label>Message Template: </label>
+            <input type="text" name="echc_msg_template" value="<?= htmlspecialchars(get_option('echc_msg_template'))?>"/>
+        </div>
+
+        <!-- <h2>General</h2>
+        <div class="form_row">
+            <label>地區 : </label>
+            <input type="checkbox" name="echc_shop_area[]" value="<?= get_option('echc_shop_area')?>" id="echc_shop_area">
+        </div> -->
+      </form>
       <?php
-        settings_fields('echc_gen_settings');
-        do_settings_sections('echc_gen_settings');
-        $echc_shop_area = get_option('echc_shop_area');
+      $ech_lfg_apply_recapt = get_option('ech_lfg_apply_recapt');
+      if($ech_lfg_apply_recapt): ?>
+        <h2>LFG reCAPTCHA v3</h2>
+        <div class="form_row">
+            <label>Recaptcha Site Key: </label>
+            <input type="text" name="ech_lfg_recaptcha_site_key" value="<?= htmlspecialchars(get_option('ech_lfg_recaptcha_site_key'))?>"/>
+        </div>
+        <div class="form_row">
+            <label>Recaptcha Secret Key: </label>
+            <input type="text" name="ech_lfg_recaptcha_secret_key" value="<?= htmlspecialchars(get_option('ech_lfg_recaptcha_secret_key'))?>"/>
+        </div>
+
+      <?php 
+        endif;
       ?>
-      <!-- <h2>General</h2>
-      <div class="form_row">
-          <label>地區 : </label>
-          <input type="checkbox" name="echc_shop_area[]" value="<?= get_option('echc_shop_area')?>" id="echc_shop_area">
-      </div> -->
-    </form>
+      
   </div>
 </div>

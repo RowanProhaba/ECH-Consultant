@@ -136,6 +136,7 @@ class Ech_Consultant_Admin
         // register_setting( 'echc_gen_settings', 'echc_submitBtn_text_color');
         // register_setting( 'echc_gen_settings', 'echc_submitBtn_hoverColor');
         // register_setting( 'echc_gen_settings', 'echc_submitBtn_text_hoverColor');
+        register_setting( 'echc_gen_settings', 'echc_msg_template');
         // register_setting(
         //     'echc_gen_settings',
         //     'echc_shop_area',
