@@ -35,7 +35,7 @@ class Ech_consultant_Sleekflow_Public
 	}
 
 
-    public function consultant_SleekflowSendMsg() {
+    public function echc_SleekflowSendMsg() {
         $phone = preg_replace('/\D/', '', $_POST['phone']);
         $customer_id = $this->get_sleekflow_contact_id($phone);
         $object_key = explode('|',$_POST['wati_msg'])[0];
@@ -223,7 +223,7 @@ class Ech_consultant_Sleekflow_Public
         $headers = array();
         $headers[] = 'Accept: application/json';
         $headers[] = 'Content-Type: application/json';
-        $headers[] = 'X-Sleekflow-Api-Key: '. get_option( 'ech_consultant_sleekflow_token' );        
+        $headers[] = 'X-Sleekflow-Api-Key: '. get_option( 'ech_lfg_sleekflow_token' );        
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($dataArr) );

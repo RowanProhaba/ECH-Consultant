@@ -32,18 +32,32 @@ class Ech_consultant_Omnichat_Public
 
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
+
+        $this->omnichat_token = get_option('ech_lfg_omnichat_token');
+		$this->omnichat_channel = get_option('ech_lfg_brand_whatsapp');
 	}
 
 
-    public function consultant_OmnichatSendMsg() {
+    public function echc_OmnichatSendMsg() {
         $domain = get_site_url();
+        $channel_id = $this->omnichat_channel;
+        $msg_template = isset($_POST['msg_template']) ? $_POST['msg_template'] : '';
+        $phone = preg_replace('/\D/', '', $_POST['phone']);
+        $booking_date = isset($_POST['booking_date']) && $_POST['booking_date'] != '' ? $_POST['booking_date'] : '';
+        $booking_time = isset($_POST['booking_time']) && $_POST['booking_time'] != '' ? $_POST['booking_time'] : '';
+        $booking_location = isset($_POST['booking_location']) && $_POST['booking_location'] != '' ? $_POST['booking_location'] : '';
+        $consultant = isset($_POST['consultant']) && $_POST['consultant'] != '' ? $_POST['consultant'] : '';
+        $msg_header = isset($_POST['msg_header']) && $_POST['msg_header'] != '' ? $_POST['msg_header'] : '';
+        $msg_body = isset($_POST['msg_body']) && $_POST['msg_body'] != '' ? $_POST['msg_body'] : '';
+        $msg_button = isset($_POST['msg_button']) && $_POST['msg_button'] != '' ? $_POST['msg_button'] : '';
+
         $data = array();
 
-        $data['trackId'] = $_POST['wati_msg'];
+        $data['trackId'] = $msg_template;
         $data['platform'] = "whatsapp";
-        $data['channelId'] = get_option( 'ech_lfg_brand_whatsapp' );
+        $data['channelId'] = $channel_id;
         $data['to'] = $_POST['phone'];
-        $data['tags'] = [$_POST['wati_msg']];
+        $data['tags'] = [$msg_template];
 
         // data sample
         // {
@@ -104,17 +118,15 @@ class Ech_consultant_Omnichat_Public
         $messages = [
             'type' => 'whatsappTemplate',
             'whatsappTemplate' => [
-                'name' => $_POST['wati_msg'],
+                'name' => $msg_template,
                 'components' => []
             ]
             
         ];
 
-        $msg_header = '';
         $media_type=['image','video','document'];
         $headerComponent = [];
-        if(isset($_POST['msg_header']) && !empty($_POST['msg_header'])){
-            $msg_header = $_POST['msg_header'];
+        if($msg_header){
             $type = explode('|',$msg_header)[0];
             $content = explode('|',$msg_header)[1];
             if(in_array($type,$media_type)){
@@ -138,47 +150,33 @@ class Ech_consultant_Omnichat_Public
             array_push($messages['whatsappTemplate']['components'],$headerComponent);
         }
 
-        $msg_body = '';
         $bodyComponent= [
             'type' => 'body',
             'parameters' => []
         ];
 
-        if(isset($_POST['msg_body']) && !empty($_POST['msg_body'])){
-            $msg_body = $_POST['msg_body'];
+        if($msg_body){
             foreach (explode(',',$msg_body) as $value) {
                 $temp = ['type' => 'text', 'text' => $_POST[$value]];
                 array_push($bodyComponent['parameters'],$temp);
             }
         }else{
-            if(strpos($_POST['wati_msg'],"epay") !== false ){
-                $bodyComponent = [
-                    'type' => 'body',
-                    'parameters' => [
-                        ['type' => 'text', 'text' => $_POST['booking_date']],
-                        ['type' => 'text', 'text' => $_POST['booking_time']],
-                        ['type' => 'text', 'text' => $_POST['booking_location']],
-                    ]
-                ];
-            }else{
-                $bodyComponent = [
-                    'type' => 'body',
-                    'parameters' => [
-                        ['type' => 'text', 'text' => $_POST['name']],
-                        ['type' => 'text', 'text' => $_POST['booking_location']],
-                        ['type' => 'text', 'text' => $_POST['booking_item']],
-                    ]
-                ];
-            }
+            $bodyComponent = [
+                'type' => 'body',
+                'parameters' => [
+                    ['type' => 'text', 'text' => $booking_date],
+                    ['type' => 'text', 'text' => $booking_time],
+                    ['type' => 'text', 'text' => $booking_location],
+                    ['type' => 'text', 'text' => $consultant],
+                ]
+            ];
         }
         array_push($messages['whatsappTemplate']['components'],$bodyComponent);
 
         $msg_button = '';
-        $epayParam = '';
         if(isset($_POST['msg_button']) && !empty($_POST['msg_button'])){
             $msg_button = $_POST['msg_button'];
-            if(strpos($_POST['wati_msg'],"epay") !== false ){
-                $epayParam = $epayData;
+            if(strpos($_POST['msg'],"epay") !== false ){
                 $buttonComponent = [
                     'type' => 'button',
                     'sub_type' => 'url',
@@ -206,31 +204,24 @@ class Ech_consultant_Omnichat_Public
         $data['messages'] = [$messages];
 
         $result	= $this->consultant_omnichat_curl("https://open-api.omnichat.ai/v1/direct-messages", $data);
-        echo json_encode(['result' => $result,'epayParam' => $epayParam]);
-        wp_die();
+
+        wp_send_json_success([
+            'result' => $result,
+            'data' => $data
+        ]);
     }
 
-    private function encrypted_epay($epayData){
-        $secretKey = get_option( 'ech_consultant_epay_secret_key' );
-
-        $jsonString = json_encode($epayData);
-        $compressedData = gzcompress($jsonString);
-        $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length('aes-256-cbc'));
-        $encryptedData = openssl_encrypt($compressedData, 'aes-256-cbc', $secretKey, 0, $iv);
-        $encryptedPayload = base64_encode($encryptedData . "::" . base64_encode($iv));
-
-        return $encryptedPayload;
-    }
     private function consultant_omnichat_curl($api_link, $dataArr = null) {
-        $ch = curl_init();
+        $token = $this->omnichat_token;
 
+        $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $api_link);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_POST, 1);
 
         $headers = array();
         $headers[] = 'Accept: */*';
-        $headers[] = 'Authorization: '. get_option( 'ech_consultant_omnichat_token' );        
+        $headers[] = 'Authorization: '. $token;        
         $headers[] = 'Content-Type: application/json';
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 

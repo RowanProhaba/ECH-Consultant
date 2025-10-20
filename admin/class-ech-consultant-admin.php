@@ -130,7 +130,7 @@ class Ech_Consultant_Admin
         require_once('partials/ech-consultant-admin-display.php');
     }
 
-    public function reg_ech_consultant_management()
+    public function reg_ech_consultant_settings()
     {
         // register_setting( 'echc_gen_settings', 'echc_submitBtn_color');
         // register_setting( 'echc_gen_settings', 'echc_submitBtn_text_color');

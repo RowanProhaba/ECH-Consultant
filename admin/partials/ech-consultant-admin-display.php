@@ -70,8 +70,8 @@
           </div>
           <?php break;
 
-endswitch;?>
-      <form method="post" id="lfg_gen_settings_form">
+      endswitch;?>
+      <form method="post" id="echc_gen_settings_form">
         <?php
           settings_fields('echc_gen_settings');
           do_settings_sections('echc_gen_settings');
@@ -82,12 +82,11 @@ endswitch;?>
             <input type="text" name="echc_msg_template" value="<?= htmlspecialchars(get_option('echc_msg_template'))?>"/>
         </div>
 
-        <!-- <h2>General</h2>
         <div class="form_row">
-            <label>地區 : </label>
-            <input type="checkbox" name="echc_shop_area[]" value="<?= get_option('echc_shop_area')?>" id="echc_shop_area">
-        </div> -->
+            <button type="submit"> Save </button>
+        </div>
       </form>
+      <div class="statusMsg"></div>
       <?php
       $ech_lfg_apply_recapt = get_option('ech_lfg_apply_recapt');
       if($ech_lfg_apply_recapt): ?>

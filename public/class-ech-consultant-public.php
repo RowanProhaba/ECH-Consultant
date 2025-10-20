@@ -128,8 +128,8 @@ class Ech_Consultant_Public
         $shop_label = htmlspecialchars(str_replace(' ', '', $paraArr['shop_label']));
         $submit_label = htmlspecialchars(str_replace(' ', '', $paraArr['submit_label']));
 
-        // Wati
-        $wati_msg = htmlspecialchars(str_replace(' ', '', $paraArr['wati_msg'] ?? ''));
+        // Whatsapp send
+        $msg_template = htmlspecialchars(str_replace(' ', '', $paraArr['msg_template'] ?? ''));
         $msg_header = htmlspecialchars(str_replace(' ', '', $paraArr['msg_header'] ?? ''));
         $msg_body = htmlspecialchars(str_replace(' ', '', $paraArr['msg_body'] ?? ''));
         $msg_button = htmlspecialchars(str_replace(' ', '', $paraArr['msg_button'] ?? ''));
@@ -138,9 +138,8 @@ class Ech_Consultant_Public
             return '<div class="code_error">Sending Message Api error - Sending Message Api Should be choose. Please setup in dashboard. </div>';
         }
 
-        if ($wati_msg == null && $msg_send_api != 'kommo') {
-            error_log($msg_send_api);
-            return '<div class="code_error">wati_send error - wati_send enabled, wati_msg cannot be empty</div>';
+        if (empty($msg_template) ||$msg_template == null) {
+            return '<div class="code_error">Whatsapp send error - Whatsapp send enabled, Message Template cannot be empty</div>';
         }
         $get_brandWtsNo = get_option('ech_lfg_brand_whatsapp');
         if (empty($get_brandWtsNo)) {
@@ -159,7 +158,7 @@ class Ech_Consultant_Public
                 if (empty($get_sleekflow_token)) {
                     return '<div class="code_error">Sleekflow error - Sleekflow Token are empty. Please setup in dashboard. </div>';
                 }
-                $wati_msg_ary = array_filter(array_map('trim', array_map('strtolower', str_getcsv($wati_msg, '|'))));
+                $wati_msg_ary = array_filter(array_map('trim', array_map('strtolower', str_getcsv($msg_template, '|'))));
                 if (count($wati_msg_ary) != 2) {
                     return '<div class="code_error">wati_msg error - Sleekflow objectKey or Wati API are empty.</div>';
                 }
@@ -207,7 +206,7 @@ class Ech_Consultant_Public
         // *********** (END) Check if apply reCAPTCHA v3 ***************/
 
         $output .= '
-		<form class="echc_form" id="echc_form" action="" method="post" data-shop-label="' . $shop_label . '" data-shop-count="' . $shop_count . '" data-ajaxurl="' . get_admin_url(null, 'admin-ajax.php') . '" data-ip="' . $ip . '" data-url="https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . '" data-apply-recapt="' . $apply_recapt . '" data-recapt-site-key="' . $recapt_site_key . '" data-recapt-score="' . $recapt_score . '" data-msg-send-api="' . $msg_send_api . '" data-wati-msg="' . $wati_msg . '" data-msg-header="' . $msg_header . '" data-msg-body="' . $msg_body . '" data-msg-button="' . $msg_button . '">
+		<form class="echc_form" id="echc_form" action="" method="post" data-shop-label="' . $shop_label . '" data-shop-count="' . $shop_count . '" data-ajaxurl="' . get_admin_url(null, 'admin-ajax.php') . '" data-ip="' . $ip . '" data-url="https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . '" data-apply-recapt="' . $apply_recapt . '" data-recapt-site-key="' . $recapt_site_key . '" data-recapt-score="' . $recapt_score . '" data-msg-send-api="' . $msg_send_api . '" data-msg-template="' . $msg_template . '" data-msg-header="' . $msg_header . '" data-msg-body="' . $msg_body . '" data-msg-button="' . $msg_button . '">
 			<div class="form_row echc_formMsg"></div>
 			';
 
@@ -284,7 +283,7 @@ class Ech_Consultant_Public
 					<select class="form-control" name="shop" id="shop" required >
 						<option disabled="" selected="" value="">' . $shop_label . '</option>';
             for ($i = 0; $i < $shop_count; $i++) {
-                $output .= '<option value="' . $paraArr['shop_code'][$i] . '">' . $paraArr['shop'][$i] . '</option>';
+                $output .= '<option value="' . $paraArr['shop_code'][$i] . '" data-shop-text-value="' . $paraArr['shop'][$i] . '">' . $paraArr['shop'][$i] . '</option>';
             }
             $output .= '
 					</select>';
@@ -298,40 +297,39 @@ class Ech_Consultant_Public
         $output .= '
         <div class="form_row" data-ech-field="consultant">
             <select class="form-control" name="consultant" id="consultant" required>';
-        
-        if ($shop_count == 1) {
-            $shop_code = strtolower(trim($paraArr['shop_code'][0]));
-            $args = [
-                'post_type' => 'ec-consultant',
-                'tax_query' => [
-                    [
-                        'taxonomy' => 'consultant-category',
-                        'field'    => 'slug',
-                        'terms'    => $shop_code,
+
+            if ($shop_count == 1) {
+                $shop_code = strtolower(trim($paraArr['shop_code'][0]));
+                $args = [
+                    'post_type' => 'ec-consultant',
+                    'tax_query' => [
+                        [
+                            'taxonomy' => 'consultant-category',
+                            'field'    => 'slug',
+                            'terms'    => $shop_code,
+                        ],
                     ],
-                ],
-                'posts_per_page' => -1,
-                'no_found_rows'  => true,
-                'fields'         => 'ids',
-            ];
-            $consultant_ids = get_posts($args);
-            if (!empty($consultant_ids)) {
-                $output .= '<option disabled selected value="">' . $this->form_echolang(['*Please Select Consultant','*請選擇顧問','*请选择顾问']) . '</option>';
-                foreach ($consultant_ids as $cid) {
-                    $fields = get_fields($cid);
-                    $name = $this->form_echolang([$fields['name_en'], $fields['name_zh'], $fields['name_cn']]);
-                    $output .= '<option value="' . esc_attr($cid) . '">' . esc_html($name) . '</option>';
+                    'posts_per_page' => -1,
+                    'no_found_rows'  => true,
+                    'fields'         => 'ids',
+                ];
+                $consultant_ids = get_posts($args);
+                if (!empty($consultant_ids)) {
+                    $output .= '<option disabled="" selected="" value="">' . $this->form_echolang(['*Please Select Consultant','*請選擇顧問','*请选择顾问']) . '</option>';
+                    foreach ($consultant_ids as $cid) {
+                        $fields = get_fields($cid);
+                        $name = $this->form_echolang([$fields['name_en'], $fields['name_zh'], $fields['name_cn']]);
+                        $output .= '<option value="' . esc_attr($cid) . '">' . esc_html($name) . '</option>';
+                    }
+                } else {
+                    $output .= '<option disabled="" selected="" value="">' . $this->form_echolang(['No Consultants Found','沒有找到顧問','未找到顾问']) . '</option>';
                 }
-            } else {
-                $output .= '<option disabled selected>' . $this->form_echolang(['No Consultants Found','沒有找到顧問','未找到顾问']) . '</option>';
+            }else {
+                $output .= '
+                    <option  disabled="" selected="" value="">' . $this->form_echolang(['Please Select Area First','*請先選擇地區','*请先选择地区']) . '</option>';
             }
-        }else {
-            $output .= '
-                <option disabled="" selected="" value="">' . $this->form_echolang(['*Please Select Consultant','*請選擇顧問','*请选择顾问']) . '</option>
-                <option disabled="" value="">' . $this->form_echolang(['Please Select Area First','請先選擇地區','请先选择地区']) . '</option>';
-        }
         $output .= '
-            </select>
+                </select>
         </div>';
         
         //**** (END) Consultant Options

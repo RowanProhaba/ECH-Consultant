@@ -44,7 +44,7 @@ class Ech_consultant_Kommo_Public
         $this->version = $version;
     }
 
-    public function consultant_KommoSendMsg()
+    public function echc_KommoSendMsg()
     {
         $phone = preg_replace('/\D/', '', $_POST['phone']);
 
@@ -372,7 +372,7 @@ class Ech_consultant_Kommo_Public
         $headers = [];
         $headers[] = 'Accept: application/json';
         $headers[] = 'Content-Type: application/json';
-        $headers[] = 'authorization: Bearer ' . get_option('ech_consultant_kommo_token');
+        $headers[] = 'authorization: Bearer ' . get_option('ech_lfg_kommo_token');
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($dataArr));

@@ -59,7 +59,7 @@
 .echc_form div[data-ech-field="booking_date"],
 .echc_form div[data-ech-field="booking_time"],
 .echc_form div[data-ech-field="shop"],
-.echc_form div[data-ech-field="shop"]~.echc_form div[data-ech-field="consultant"]{
+.echc_form div[data-ech-field="shop"] ~ div[data-ech-field="consultant"]{
   flex-basis: calc( (100% - 10px) / 2);
 }
 .echc_form div[data-ech-field="info_remark"] .redWord{

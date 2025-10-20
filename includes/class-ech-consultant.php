@@ -171,6 +171,8 @@ class Ech_Consultant
         // ^^^ Add admin menu
         $this->loader->add_action('admin_menu', $plugin_admin, 'echc_admin_menu');
 
+        // ^^^ Register plugin settings
+        $this->loader->add_action('admin_init', $plugin_admin, 'reg_ech_consultant_settings');
 
     }
 
@@ -186,6 +188,10 @@ class Ech_Consultant
 
         $plugin_public = new Ech_Consultant_Public($this->get_plugin_name(), $this->get_version());
 
+		$echc_omnichat_public = new Ech_consultant_Omnichat_Public( $this->get_plugin_name(), $this->get_version() );
+		$echc_sleekflow_public = new Ech_consultant_Sleekflow_Public( $this->get_plugin_name(), $this->get_version() );
+		$echc_kommo_public = new Ech_consultant_Kommo_Public( $this->get_plugin_name(), $this->get_version() );
+
         $this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_styles');
         $this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_scripts');
 		// ^^^ register get_ec_consultants function
@@ -194,9 +200,19 @@ class Ech_Consultant
 		// ^^^ register get_consultant_info function
 		$this->loader->add_action( 'wp_ajax_get_consultant_info', $plugin_public, 'get_consultant_info' );
 		$this->loader->add_action( 'wp_ajax_nopriv_get_consultant_info', $plugin_public, 'get_consultant_info' );
-		// ^^^ register echc_recaptVerify function
-		$this->loader->add_action( 'wp_ajax_echc_recaptVerify', $plugin_public, 'echc_recaptVerify' );
-		$this->loader->add_action( 'wp_ajax_nopriv_echc_recaptVerify', $plugin_public, 'echc_recaptVerify' );
+
+        // ^^^ register Omnichat functions
+		$this->loader->add_action( 'wp_ajax_echc_OmnichatSendMsg', $echc_omnichat_public, 'echc_OmnichatSendMsg' );
+		$this->loader->add_action( 'wp_ajax_nopriv_echc_OmnichatSendMsg', $echc_omnichat_public, 'echc_OmnichatSendMsg' );
+
+		// ^^^ register SleekFlow functions
+		$this->loader->add_action( 'wp_ajax_echc_SleekflowSendMsg', $echc_sleekflow_public, 'echc_SleekflowSendMsg' );
+		$this->loader->add_action( 'wp_ajax_nopriv_echc_SleekflowSendMsg', $echc_sleekflow_public, 'echc_SleekflowSendMsg' );
+
+		// ^^^ register Kommo functions
+		$this->loader->add_action( 'wp_ajax_echc_KommoSendMsg', $echc_kommo_public, 'echc_KommoSendMsg' );
+		$this->loader->add_action( 'wp_ajax_nopriv_echc_KommoSendMsg', $echc_kommo_public, 'echc_KommoSendMsg' );
+
         // ^^^ Add shortcodes
         $this->loader->add_shortcode('ech_consultant', $plugin_public, 'display_ech_consultant_form');
     }
