@@ -19,194 +19,195 @@
 			const $consultantSelect = $form.find('select[name="consultant"]');
 			const $container = $form.next('.consultant-container');
 
-			$form.find('select[name="shop"], input[name="shop"]').on('change', function () {
+			$form.find('select[name="shop"], input[name="shop"]').on('change', async function () {
 				const shopCode = $(this).val();
-				$consultantSelect.html('<option disabled selected>載入中...</option>');
-				$container.html('');
+				$consultantSelect.html('<option disabled="" selected="" value="">載入中...</option>');
+				$container.empty();
 
-				const data = {
-					action: 'get_ec_consultants',
-					shop_area_code: shopCode
-				};
+				try {
+					const res = await fetch(ajaxurl, {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+						body: new URLSearchParams({
+							action: 'get_ec_consultants',
+							shop_area_code: shopCode
+						})
+					});
 
-				$.post(ajaxurl, data, function (res) {
+					const json = await res.json();
 					$consultantSelect.empty();
-					if (res.success && res.data.consultants.length > 0) {
+
+					if (json.success && json.data.consultants.length) {
 						$consultantSelect.append('<option disabled="" selected="" value="">*請選擇顧問</option>');
-						res.data.consultants.forEach(item => {
+						json.data.consultants.forEach(item => {
 							$consultantSelect.append(`<option value="${item.id}">${item.name}</option>`);
 						});
 					} else {
-						const msg = res.data?.message || '沒有符合的顧問';
-						$consultantSelect.append(`<option disabled="" selected="" value="">${msg}</option>`);
+						$consultantSelect.append(`<option disabled="" selected="" value="">${json.data?.message || '沒有符合的顧問'}</option>`);
 					}
-				}).fail(function () {
+				} catch (error) {
+					console.error(error);
 					$consultantSelect.html('<option disabled="" selected="" value="">載入失敗，請稍後再試。</option>');
-				});
+				}
 			});
 
-			$form.find('select[name="consultant"]').on('change', function () {
+			$form.find('select[name="consultant"]').on('change', async function () {
 				const consultantId = $(this).val();
-				// console.log(consultantId);
-				$container.html(`<div class="loading-spinner"></div>`);
+				$container.html('<div class="loading-spinner"></div>');
 
-				const data = {
-					action: 'get_consultant_info',
-					consultant_id: consultantId
-				};
+				try {
+					const res = await fetch(ajaxurl, {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+						body: new URLSearchParams({
+							action: 'get_consultant_info',
+							consultant_id: consultantId
+						})
+					});
 
-				$.post(ajaxurl, data, function (res) {
-					// console.log(res);
-					$container.html(res);
-				}).fail(function () {
+					const html = await res.text();
+					$container.html(html);
+
+				} catch (error) {
+					console.error(error);
 					$container.html('<p class="error">載入失敗，請稍後再試。</p>');
-				});
+				}
 			});
 
 		});
 
 		/*********** .echc_form submit ***********/
-		$('.echc_form').on("submit", function (e) {
+		$('.echc_form').on("submit", async function (e) {
 			e.preventDefault();
-			const $form = $(this), 
-						ajaxurl = $form.data('ajaxurl'), 
-						_tel_prefix = $form.find("select[name='telPrefix']").val(), 
-						_tel = $form.find("input[name='tel']").val(),
-						_booking_date = $form.find("input[name='booking_date']").val(),
-						_booking_time = $form.find("input[name='booking_time']").val(),
-						_booking_location = $form.find("select[name='shop'] option:selected, input[name='shop']:checked").data("shop-text-value"),
-						_consultant = $form.find("select[name='consultant'] option:selected").text(),
-						_msg_api = $form.data("msg-send-api"),
-						_msg_template = $form.data("msg-template"),
-						_msg_header = $form.data("msg-header"),
-						_msg_body = $form.data("msg-body"),
-						_msg_button = $form.data("msg-button");
+			const $form = $(this);
+
+			const ajaxurl = $form.data('ajaxurl'),
+				_source_type = $form.data('source-type');
+				_tel_prefix = $form.find("select[name='telPrefix']").val(),
+				_tel = $form.find("input[name='tel']").val(),
+				_booking_date = $form.find("input[name='booking_date']").val(),
+				_booking_time = $form.find("input[name='booking_time']").val(),
+				_booking_location = $form.find("select[name='shop'] option:selected, input[name='shop']:checked").data("shop-text-value"),
+				_consultant = $form.find("select[name='consultant'] option:selected").text(),
+				_msg_api = $form.data("msg-send-api"),
+				_msg_template = $form.data("msg-template"),
+				_msg_header = $form.data("msg-header"),
+				_msg_body = $form.data("msg-body"),
+				_msg_button = $form.data("msg-button");
+
 			if ((_tel_prefix === "+852" && _tel.length !== 8) || (_tel_prefix === "+853" && _tel.length !== 8)) {
 				$form.find(".echc_formMsg").html("+852, +853電話必需8位數字(沒有空格)");
 				return false;
-			} else if ((_tel_prefix === "+86" && _tel.length !== 11)) {
+			}
+
+			if ((_tel_prefix === "+86" && _tel.length !== 11)) {
 				$form.find(".echc_formMsg").html("+86電話必需11位數字(沒有空格)");
 				return false;
-			} else if (_consultant == null || _consultant == undefined) {
+			}
+
+			if (!_consultant) {
 				$form.find(".echc_formMsg").html("必須選擇顧問");
 				return false;
-			} else {
-				$(".ech_echc_form button[type=submit]").prop('disabled', true);
-				$form.find(".echc_formMsg").html("提交中...");
-				$(".ech_echc_form button[type=submit]").html("提交中...");
+			}
 
-				const msgData = {
-					ajaxurl : ajaxurl,
-					phone : _tel_prefix + _tel,
-					booking_date : _booking_date,
-					booking_time : _booking_time,
-					booking_location : _booking_location,
-					consultant : _consultant,
-					msg_api : _msg_api,
-					msg_template : _msg_template,
-					msg_header : _msg_header,
-					msg_body : _msg_body,
-					msg_button : _msg_button,
-				}
-				console.log(msgData);
-				const applyRecapt = $(this).data("apply-recapt");
-				if (applyRecapt == "1") {
-					const recaptSiteKey = $(this).data("recapt-site-key");
-					const recaptScore = $(this).data("recapt-score");
+			$form.find(".echc_formMsg").html("提交中...");
+			$(".ech_echc_form button[type=submit]").prop('disabled', true).html("提交中...");
 
-					grecaptcha.ready(function () {
-						grecaptcha.execute(recaptSiteKey, { action: 'submit' }).then(function (recapt_token) {
-							const recaptData = {
-								'action': 'echc_recaptVerify',
-								'recapt_token': recapt_token
-							};
-							$.post(ajaxurl, recaptData, function (recapt_msg) {
-								const recaptObj = JSON.parse(recapt_msg);
-								if (recaptObj.success && recaptObj.score >= recaptScore) {
-									// success, send to msg api
-									wtsSendMsg(msgData);
-								}
-							});
+			const msgData = {
+				ajaxurl: ajaxurl,
+				source_type: _source_type,
+				phone: _tel_prefix + _tel,
+				booking_date: _booking_date,
+				booking_time: _booking_time,
+				booking_location: _booking_location,
+				consultant: _consultant,
+				msg_api: _msg_api,
+				msg_template: _msg_template,
+				msg_header: _msg_header,
+				msg_body: _msg_body,
+				msg_button: _msg_button,
+			};
+
+			// reCaptcha
+			const applyRecapt = $form.data("apply-recapt");
+			if (applyRecapt == "1") {
+				const recaptSiteKey = $form.data("recapt-site-key");
+				const recaptScore = $form.data("recapt-score");
+
+				grecaptcha.ready(function () {
+					grecaptcha.execute(recaptSiteKey, { action: 'submit' }).then(async function (recapt_token) {
+						const recaptRes = await fetch(ajaxurl, {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+							body: new URLSearchParams({ action: 'echc_recaptVerify', recapt_token })
 						});
+
+						const recaptObj = await recaptRes.json();
+						if (recaptObj.success && recaptObj.score >= recaptScore) {
+							wtsSendMsg(msgData);
+						}
 					});
-				} else {
-					// recaptcha disabled
-					wtsSendMsg(msgData);
-				}
+				});
+			} else {
+				wtsSendMsg(msgData);
 			}
 		});
 
 	}); // end $(function)
-	function wtsSendMsg(data) {
+	async function wtsSendMsg(data) {
 		const ajaxurl = data.ajaxurl;
-		const msg_api = data.msg_api;
-		let _action = '';
-		switch (msg_api) {
-			case 'omnichat':
-				_action = 'echc_OmnichatSendMsg';
-				break;
-			case 'sleekflow':
-				_action = 'echc_SleekflowSendMsg';
-				break;
-			case 'kommo':
-				_action = 'echc_KommoSendMsg';
-				break;
-		}
-		const msgData = {
-			'action': _action,
-			'msg_template': data.msg_template,
-			'phone': data.phone,
-			'booking_date': data.booking_date,
-			'booking_time': data.booking_time,
-			'booking_location': data.booking_location,
-			'consultant': data.consultant,
-			'msg_header': data.msg_header,
-			'msg_body': data.msg_body,
-			'msg_button': data.msg_button,
+		let _action = {
+			'omnichat': 'echc_OmnichatSendMsg',
+			'sleekflow': 'echc_SleekflowSendMsg',
+			'kommo': 'echc_KommoSendMsg'
 		};
-		console.log(msgData);
-		$.post(ajaxurl, msgData, function (res) {
-			console.log(res);
-			if (res.success) {
-				const result = JSON.parse(res.data.result);
-				console.log(result);
-				switch (msg_api) {
-					case 'omnichat':						
-						if (result.content.messageId) {
-							console.log('wtsapp msg sent');
-						} else {
-							console.log('wati send error');
-						}
-						break;
-					case 'sleekflow':
-						const createCustomObjects = JSON.parse(result.createCustomObjects);
-						if (result.status === "Sending") {
-							console.log('wtsapp msg sent');
-						} else {
-							console.error("SleekFlow 訊息發送失敗:", sendMsg);
-						}
-						if (createCustomObjects.primaryPropertyValue) {
-							console.log('Created Custom Objects');
-						} else {
-							console.error("SleekFlow Create Custom Objects 失敗:", createCustomObjects);
-						}
-						break;
-					case 'kommo':
-						if (result) {
-							console.log('wtsapp msg sent');
-						} else {
-							console.log(resObj.message);
-						}
-						break;
-				}
 
-				window.location.replace(origin + '/thanks');
+		const msgData = {
+			action: _action[data.msg_api],
+			source_type: data.source_type,
+			phone: data.phone,
+			booking_date: data.booking_date,
+			booking_time: data.booking_time,
+			booking_location: data.booking_location,
+			consultant: data.consultant,
+			msg_template: data.msg_template,
+			msg_header: data.msg_header,
+			msg_body: data.msg_body,
+			msg_button: data.msg_button,
+		};
 
-			} else {
-					console.error(res.data.message);
-					alert("無法提交閣下資料, 請重試");
-					location.reload(true);
+		const handlers = {
+			omnichat: result => result.content?.messageId,
+			sleekflow: result => result.status === "Sending",
+			kommo: result => !!result
+		};
+
+		try {
+			const res = await fetch(ajaxurl, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+				body: new URLSearchParams(msgData)
+			});
+
+			const json = await res.json();
+			console.log("response: ", json);
+			if (!json.success) {
+				throw new Error(json.data.message);
 			}
-		});
+			// const result = JSON.parse(json.data.result);
+			const result = json.data.result;
+			console.log(result);
+			const isSuccess = handlers[data.msg_api]?.(result);
+			if (!isSuccess) {
+				throw new Error(`${data.msg_api} 發送失敗`);
+			}
+			console.log(`${data.msg_api} 發送成功`);
+
+			// window.location.replace(origin + '/thanks');
+		} catch (error) {
+			console.error(error);
+			alert("無法提交閣下資料，請重試");
+			// location.reload(true);
+		}
 	} // wtsSendMsg
 })(jQuery);

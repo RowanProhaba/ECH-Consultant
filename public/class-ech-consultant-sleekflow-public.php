@@ -32,24 +32,51 @@ class Ech_consultant_Sleekflow_Public
 
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
+
+		$this->brand_name = get_option('ech_lfg_brand_name');
+		$this->brand_whatsapp = get_option('ech_lfg_brand_whatsapp');
+        $this->sleekflow_token = get_option('ech_lfg_sleekflow_token');
 	}
 
 
     public function echc_SleekflowSendMsg() {
+        $source_type = isset($_POST['source_type']) && $_POST['source_type'] != '' ? $_POST['source_type'] : '';
+
+        
+        $object_key = '';
+        $msg_template = '';
+        if(isset($_POST['msg_template']) && $_POST['msg_template'] !=''){
+            $object_key = explode('|',$_POST['msg_template'])[0];
+            $msg_template = explode('|',$_POST['msg_template'])[1];
+            if($source_type){
+                $msg_template.= $msg_template.'_'.$source_type;
+            }
+        }
+
+        $booking_date = isset($_POST['booking_date']) && $_POST['booking_date'] != '' ? $_POST['booking_date'] : '';
+        $booking_time = isset($_POST['booking_time']) && $_POST['booking_time'] != '' ? $_POST['booking_time'] : '';
+        $booking_location = isset($_POST['booking_location']) && $_POST['booking_location'] != '' ? $_POST['booking_location'] : '';
+        $consultant = isset($_POST['consultant']) && $_POST['consultant'] != '' ? $_POST['consultant'] : '';
+        $msg_header = isset($_POST['msg_header']) && $_POST['msg_header'] != '' ? $_POST['msg_header'] : '';
+        $msg_body = isset($_POST['msg_body']) && $_POST['msg_body'] != '' ? $_POST['msg_body'] : '';
+        $msg_button = isset($_POST['msg_button']) && $_POST['msg_button'] != '' ? $_POST['msg_button'] : '';
         $phone = preg_replace('/\D/', '', $_POST['phone']);
-        $customer_id = $this->get_sleekflow_contact_id($phone);
-        $object_key = explode('|',$_POST['wati_msg'])[0];
-        $wati_msg = explode('|',$_POST['wati_msg'])[1];
+        $check_customer = $this->consultant_sleekflow_curl(
+            "https://api.sleekflow.io/api/contact?limit=1&offset=0&phoneNumber={$phone}",
+            'GET'
+        );
+        $customer_id = $check_customer[0]['id'] ?? null;
         if(!$customer_id){
 
             $customer_data = [
-                'first_name' => $_POST['first_name'],    
-                'last_name' => $_POST['last_name'],                      
-                'email' => $_POST['email'],
                 'phone' => $phone
             ];
 
-            $customer_id = $this->create_sleekflow_contact($customer_data);
+            $customer_id = $this->consultant_sleekflow_curl(
+                "https://api.sleekflow.io/api/contact/addOrUpdate",
+                'POST',
+                $customer_data
+            );
 
             if (is_array($customer_id) && isset($customer_id['error'])) {
                 echo json_encode([
@@ -65,38 +92,42 @@ class Ech_consultant_Sleekflow_Public
         $custom_object = [
             // 'primaryPropertyValue' => null,
             'propertyValues' => [
-                'brand' => get_option( 'ech_consultant_brand_name' ),
-                'client_name' => $_POST['name'],
-                'booking_location' => $_POST['booking_location'],
-                'booking_item' => $_POST['booking_item']
+                'brand' => $this->brand_name,
+                'phone' => $phone,
+                'booking_date_time' => $booking_date.' '.$booking_time,
+                'booking_location' => $booking_location,
+                'consultant_name' => $consultant,
             ],
             'referencedUserProfileId' => $customer_id
         ];
-        $create_custom_objects = $this->consultant_sleekflow_customObjects_curl($object_key, $custom_object);
+        $create_custom_objects = $this->consultant_sleekflow_curl(
+            "https://api.sleekflow.io/api/customObjects/{$object_key}/records",
+            'POST',
+            $custom_object
+        );
+        $create_custom_objects = [];
 
         $data = array();
         $data['channel'] = "whatsappcloudapi";
-        $data['from'] = get_option( 'ech_lfg_brand_whatsapp' );
+        $data['from'] = $this->brand_whatsapp;
         $data['to'] = $phone;
         $data['messageType'] = "template";
         $components = [];
 
-        $msg_header = '';
         $media_type=['image','video','document'];
         $headerComponent = [];
 
-        if(isset($_POST['msg_header']) && !empty($_POST['msg_header'])){
-            $msg_header = $_POST['msg_header'];
+        if($msg_header){
             $type = explode('|',$msg_header)[0];
             $content = explode('|',$msg_header)[1];
             if(in_array($type,$media_type)){
                 $headerComponent = [
                     'type' => 'header',
                     'parameters' => [
-                                        [
-                                            'type' => $type,
-                                            $type => ['link' => $content],
-                                            'filename' => 'filename'
+                        [
+                            'type' => $type,
+                            $type => ['link' => $content],
+                            'filename' => 'filename'
                         ]
                     ]
                 ];
@@ -111,209 +142,109 @@ class Ech_consultant_Sleekflow_Public
             array_push($components,$headerComponent);
         }
 
-        $msg_body = '';
         $bodyComponent= [
             'type' => 'body',
             'parameters' => []
         ];
 
-        if(isset($_POST['msg_body']) && !empty($_POST['msg_body'])){
-            $msg_body = $_POST['msg_body'];
+        if($msg_body){
             foreach (explode(',',$msg_body) as $value) {
                 $temp = ['type' => 'text', 'text' => $_POST[$value]];
                 array_push($bodyComponent['parameters'],$temp);
             }
         }else{
-            if(strpos($wati_msg,"epay") !== false ){
+            if($source_type === 'landing'){
                 $bodyComponent = [
                     'type' => 'body',
                     'parameters' => [
-                        ['type' => 'text', 'text' => $_POST['booking_date']],
-                        ['type' => 'text', 'text' => $_POST['booking_time']],
-                        ['type' => 'text', 'text' => $_POST['booking_location']],
+                        ['type' => 'text', 'text' => $booking_location],
+                        ['type' => 'text', 'text' => $consultant],
                     ]
                 ];
             }else{
                 $bodyComponent = [
                     'type' => 'body',
                     'parameters' => [
-                        ['type' => 'text', 'text' => $_POST['name']],
-                        ['type' => 'text', 'text' => $_POST['booking_location']],
-                        ['type' => 'text', 'text' => $_POST['booking_item']],
+                        ['type' => 'text', 'text' => $booking_date],
+                        ['type' => 'text', 'text' => $booking_time],
+                        ['type' => 'text', 'text' => $booking_location],
+                        ['type' => 'text', 'text' => $consultant],
                     ]
                 ];
             }
         }
         array_push($components,$bodyComponent);
 
-        $msg_button = '';
-        $epayParam = '';
-        if(isset($_POST['msg_button']) && !empty($_POST['msg_button'])){
-            $msg_button = $_POST['msg_button'];
-            if(strpos($wati_msg,"epay") !== false ){
-
-                $epayData = array(
-                    "username" => $_POST['name'], 
-                    "phone" => preg_replace('/\D/', '', $_POST['phone']), 
-                    "email" => $_POST['email'], 
-                    "booking_date" => $_POST['booking_date'],
-                    "booking_time" => $_POST['booking_time'],
-                    "booking_item" => $_POST['booking_item'],
-                    "booking_location"=>$_POST['booking_location'],    
-                    "website_url" => $_POST['website_url'],
-                    "epay_refcode" => $_POST['epayRefCode']
-                );
-                $epayData = $this->encrypted_epay($epayData);
-                $epayParam = $epayData;
-                $buttonComponent = [
+        if($msg_button){
+            foreach (explode(',',$msg_button) as $key => $value) {
+                $temp = [
                     'type' => 'button',
-                    'sub_type' => 'URL',
-                    'index' => '0',
+                    'sub_type' => 'url',
+                    'index' => $key,
                     'parameters' => [
-                        ['type' => 'text','text' => "?epay=".$epayData]
+                        ['type' => 'text','text' => $value]
                     ]
                 ];
-                array_push($components,$buttonComponent);
-            }else{
-                foreach (explode(',',$msg_button) as $key => $value) {
-                    $temp = [
-                        'type' => 'button',
-                        'sub_type' => 'url',
-                        'index' => $key,
-                        'parameters' => [
-                            ['type' => 'text','text' => $value]
-                        ]
-                    ];
-                    array_push($components,$temp);
-                }
+                array_push($components,$temp);
             }
         }
 
         $data['extendedMessage'] = [
             'WhatsappCloudApiTemplateMessageObject' => [
-                'templateName' => $wati_msg,
+                'templateName' => $msg_template,
                 'language'=> 'zh_HK',
                 'components' => $components
             ]
         ];
 
-        $result	= $this->consultant_sleekflow_curl("https://api.sleekflow.io/api/message/send/json", $data);
-        // echo $result;
-        echo json_encode(['result' => $result,'epayParam' => $epayParam, 'createCustomObjects' => $create_custom_objects]);
-        wp_die();
-    }
-    private function encrypted_epay($epayData){
-        $secretKey = get_option( 'ech_consultant_epay_secret_key' );
-
-        $jsonString = json_encode($epayData);
-        $compressedData = gzcompress($jsonString);
-        $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length('aes-256-cbc'));
-        $encryptedData = openssl_encrypt($compressedData, 'aes-256-cbc', $secretKey, 0, $iv);
-        $encryptedPayload = base64_encode($encryptedData . "::" . base64_encode($iv));
-
-        return $encryptedPayload;
-    }
-    private function consultant_sleekflow_curl($api_link, $dataArr = null) {
-        $ch = curl_init();
-
-        curl_setopt($ch, CURLOPT_URL, $api_link);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_POST, 1);
-
-        $headers = array();
-        $headers[] = 'Accept: application/json';
-        $headers[] = 'Content-Type: application/json';
-        $headers[] = 'X-Sleekflow-Api-Key: '. get_option( 'ech_lfg_sleekflow_token' );        
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($dataArr) );
-
-        $result = curl_exec($ch);
-        if (curl_errno($ch)) {
-            echo 'Error:' . curl_error($ch);
-        }
-        curl_close($ch);
-
-        return $result;
-    }
-    private function consultant_sleekflow_customObjects_curl($objectKey, $dataArr = null) {
-        $ch = curl_init();
-
-        curl_setopt($ch, CURLOPT_URL, 'https://api.sleekflow.io/api/customObjects/'.$objectKey.'/records');
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_POST, 1);
-
-        $headers = array();
-        $headers[] = 'Accept: application/json';
-        $headers[] = 'Content-Type: application/json';
-        $headers[] = 'X-Sleekflow-Api-Key: '. get_option( 'ech_consultant_sleekflow_token' );        
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($dataArr) );
-
-        $result = curl_exec($ch);
-        if (curl_errno($ch)) {
-            echo 'Error:' . curl_error($ch);
-        }
-        curl_close($ch);
-
-        return $result;
-	}
-
-    private function get_sleekflow_contact_id($phone) {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, 'https://api.sleekflow.io/api/contact?limit=1&offset=0&phoneNumber='.$phone);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST , 'GET');
-
-        $headers = array();
-        $headers[] = 'Accept: application/json';
-        $headers[] = 'Content-Type: application/json';
-        $headers[] = 'X-Sleekflow-Api-Key: '. get_option( 'ech_consultant_sleekflow_token' );        
-        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-
-        $response = curl_exec($ch);
-        curl_close($ch);
-        $data = json_decode($response, true);
-
-        if (!empty($data) && isset($data[0]['id'])) {
-            return $data[0]['id'];
-        }
-
-        return null;
-    }
-
-    private function create_sleekflow_contact($customer_data) {
-        $ch = curl_init();
-        $data = [
-            [
-                "firstName" => $customer_data['first_name'],
-                "lastName" => $customer_data['last_name'],
-                "email" => $customer_data['email'], 
-                "phoneNumber" => $customer_data['phone'],
-            ]
-        ];
+        $result = $this->consultant_sleekflow_curl(
+            "https://api.sleekflow.io/api/message/send/json",
+            'POST',
+            $data
+        );
         
-        curl_setopt($ch, CURLOPT_URL, 'https://api.sleekflow.io/api/contact/addOrUpdate');
+        wp_send_json_success([
+            'result' => $result,
+            'send_data' => $data
+        ]);
+    }
+
+    private function consultant_sleekflow_curl($api_link, $method = 'POST', $dataArr = null) {
+        $token = $this->sleekflow_token;
+    
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $api_link);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        $headers = array();
-        $headers[] = 'Accept: application/json';
-        $headers[] = 'Content-Type: application/json';
-        $headers[] = 'X-Sleekflow-Api-Key: '. get_option( 'ech_consultant_sleekflow_token' );        
+    
+        $headers = [
+            'Accept: application/json',
+            'Content-Type: application/json',
+            'X-Sleekflow-Api-Key: ' . $token
+        ];
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+    
+        if ($method === 'POST') {
+            curl_setopt($ch, CURLOPT_POST, true);
+        } elseif ($method === 'GET') {
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+        } else {
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+        }
+    
+        if (!empty($dataArr)) {
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($dataArr));
+        }
     
         $response = curl_exec($ch);
+        $error    = curl_error($ch);
         curl_close($ch);
-        
-        $result = json_decode($response, true);
-        if (!empty($result) && isset($result[0]['id'])) {
-            return $result[0]['id'];
-        } else {
-            return ['error' => 'Failed to create or update contact', 'response' => $response,'data' => $data];
+    
+        if ($error) {
+            return ['error' => $error];
         }
-
+    
+        return json_decode($response, true);
     }
+    
     
 }

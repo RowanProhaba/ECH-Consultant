@@ -33,20 +33,24 @@ class Ech_consultant_Omnichat_Public
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
 
-        $this->omnichat_token = get_option('ech_lfg_omnichat_token');
 		$this->omnichat_channel = get_option('ech_lfg_brand_whatsapp');
+        $this->omnichat_token = get_option('ech_lfg_omnichat_token');
 	}
 
 
     public function echc_OmnichatSendMsg() {
         $domain = get_site_url();
         $channel_id = $this->omnichat_channel;
-        $msg_template = isset($_POST['msg_template']) ? $_POST['msg_template'] : '';
+        $source_type = isset($_POST['source_type']) && $_POST['source_type'] != '' ? $_POST['source_type'] : '';
         $phone = preg_replace('/\D/', '', $_POST['phone']);
         $booking_date = isset($_POST['booking_date']) && $_POST['booking_date'] != '' ? $_POST['booking_date'] : '';
         $booking_time = isset($_POST['booking_time']) && $_POST['booking_time'] != '' ? $_POST['booking_time'] : '';
         $booking_location = isset($_POST['booking_location']) && $_POST['booking_location'] != '' ? $_POST['booking_location'] : '';
         $consultant = isset($_POST['consultant']) && $_POST['consultant'] != '' ? $_POST['consultant'] : '';
+        $msg_template = isset($_POST['msg_template']) ? $_POST['msg_template'] : '';
+        if($source_type){
+            $msg_template.= $msg_template.'_'.$source_type;
+        }
         $msg_header = isset($_POST['msg_header']) && $_POST['msg_header'] != '' ? $_POST['msg_header'] : '';
         $msg_body = isset($_POST['msg_body']) && $_POST['msg_body'] != '' ? $_POST['msg_body'] : '';
         $msg_button = isset($_POST['msg_button']) && $_POST['msg_button'] != '' ? $_POST['msg_button'] : '';
@@ -161,43 +165,41 @@ class Ech_consultant_Omnichat_Public
                 array_push($bodyComponent['parameters'],$temp);
             }
         }else{
-            $bodyComponent = [
-                'type' => 'body',
-                'parameters' => [
-                    ['type' => 'text', 'text' => $booking_date],
-                    ['type' => 'text', 'text' => $booking_time],
-                    ['type' => 'text', 'text' => $booking_location],
-                    ['type' => 'text', 'text' => $consultant],
-                ]
-            ];
+            if($source_type === 'landing'){
+                
+                $bodyComponent = [
+                    'type' => 'body',
+                    'parameters' => [
+                        ['type' => 'text', 'text' => $booking_location],
+                        ['type' => 'text', 'text' => $consultant],
+                    ]
+                ];
+
+            }else{
+                $bodyComponent = [
+                    'type' => 'body',
+                    'parameters' => [
+                        ['type' => 'text', 'text' => $booking_date],
+                        ['type' => 'text', 'text' => $booking_time],
+                        ['type' => 'text', 'text' => $booking_location],
+                        ['type' => 'text', 'text' => $consultant],
+                    ]
+                ];
+            }
         }
         array_push($messages['whatsappTemplate']['components'],$bodyComponent);
 
-        $msg_button = '';
-        if(isset($_POST['msg_button']) && !empty($_POST['msg_button'])){
-            $msg_button = $_POST['msg_button'];
-            if(strpos($_POST['msg'],"epay") !== false ){
-                $buttonComponent = [
+        if($msg_button){
+            foreach (explode(',',$msg_button) as $key => $value) {
+                $temp = [
                     'type' => 'button',
                     'sub_type' => 'url',
-                    'index' => '0',
+                    'index' => $key,
                     'parameters' => [
-                        ['type' => 'text','text' => $msg_button."?epay=".$epayData]
+                        ['type' => 'text','text' => $value]
                     ]
                 ];
-                array_push($messages['whatsappTemplate']['components'],$buttonComponent);
-            }else{
-                foreach (explode(',',$msg_button) as $key => $value) {
-                    $temp = [
-                        'type' => 'button',
-                        'sub_type' => 'url',
-                        'index' => $key,
-                        'parameters' => [
-                            ['type' => 'text','text' => $value]
-                        ]
-                    ];
-                    array_push($messages['whatsappTemplate']['components'],$temp);
-                }
+                array_push($messages['whatsappTemplate']['components'],$temp);
             }
         }
         
@@ -207,7 +209,7 @@ class Ech_consultant_Omnichat_Public
 
         wp_send_json_success([
             'result' => $result,
-            'data' => $data
+            'send_data' => $data
         ]);
     }
 
@@ -227,13 +229,15 @@ class Ech_consultant_Omnichat_Public
 
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($dataArr) );
 
-        $result = curl_exec($ch);
-        if (curl_errno($ch)) {
-            echo 'Error:' . curl_error($ch);
-        }
+        $response = curl_exec($ch);
+        $error = curl_error($ch);
         curl_close($ch);
-
-        return $result;
+    
+        if ($error) {
+            return ['error' => $error];
+        }
+    
+        return json_decode($response, true); 
 	}
 
 

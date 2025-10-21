@@ -84,7 +84,7 @@ class Ech_Consultant_Public
     // ^^^ ECH Consultant shortcode
     public function display_ech_consultant_form($atts)
     {
-        $source_type = '';
+        $source_type = 'wts';
         if (isset($_GET['source_type']) && $_GET['source_type'] == 'landing') {
             $source_type = $_GET['source_type'];
         }
@@ -137,7 +137,6 @@ class Ech_Consultant_Public
         if (empty($msg_send_api)) {
             return '<div class="code_error">Sending Message Api error - Sending Message Api Should be choose. Please setup in dashboard. </div>';
         }
-
         if (empty($msg_template) ||$msg_template == null) {
             return '<div class="code_error">Whatsapp send error - Whatsapp send enabled, Message Template cannot be empty</div>';
         }
@@ -206,7 +205,7 @@ class Ech_Consultant_Public
         // *********** (END) Check if apply reCAPTCHA v3 ***************/
 
         $output .= '
-		<form class="echc_form" id="echc_form" action="" method="post" data-shop-label="' . $shop_label . '" data-shop-count="' . $shop_count . '" data-ajaxurl="' . get_admin_url(null, 'admin-ajax.php') . '" data-ip="' . $ip . '" data-url="https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . '" data-apply-recapt="' . $apply_recapt . '" data-recapt-site-key="' . $recapt_site_key . '" data-recapt-score="' . $recapt_score . '" data-msg-send-api="' . $msg_send_api . '" data-msg-template="' . $msg_template . '" data-msg-header="' . $msg_header . '" data-msg-body="' . $msg_body . '" data-msg-button="' . $msg_button . '">
+		<form class="echc_form" id="echc_form" action="" method="post" data-source_type="' . $source_type . '" data-shop-label="' . $shop_label . '" data-shop-count="' . $shop_count . '" data-ajaxurl="' . get_admin_url(null, 'admin-ajax.php') . '" data-ip="' . $ip . '" data-url="https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . '" data-apply-recapt="' . $apply_recapt . '" data-recapt-site-key="' . $recapt_site_key . '" data-recapt-score="' . $recapt_score . '" data-msg-send-api="' . $msg_send_api . '" data-msg-template="' . $msg_template . '" data-msg-header="' . $msg_header . '" data-msg-body="' . $msg_body . '" data-msg-button="' . $msg_button . '">
 			<div class="form_row echc_formMsg"></div>
 			';
 
@@ -240,7 +239,7 @@ class Ech_Consultant_Public
         //**** (END) Tel
 
         // Booking Date and Time
-        if ($source_type) {
+        if ($source_type === 'landing') {
 
             $output .= '
 				<div class="form_row" data-ech-field="booking_date" style="display:none">
@@ -248,7 +247,7 @@ class Ech_Consultant_Public
 				</div>
 
 				<div class="form_row" data-ech-field="booking_time" style="display:none">
-						<input type="text" placeholder="' . $this->form_echolang(['*Booking Time','*預約時間','*预约时间']) . '" id="booking_time" class="form-control echc_timepicker ui-timepicker-input" name="booking_time">
+					<input type="text" placeholder="' . $this->form_echolang(['*Booking Time','*預約時間','*预约时间']) . '" id="booking_time" class="form-control echc_timepicker ui-timepicker-input" name="booking_time">
 				</div>';
 
         } else {

@@ -42,78 +42,60 @@ class Ech_consultant_Kommo_Public
 
         $this->plugin_name = $plugin_name;
         $this->version = $version;
+
+        $this->kommo_token = get_option('ech_lfg_kommo_token');
+        $this->pipeline_id = get_option('ech_lfg_kommo_pipeline_id');
+        $this->status_id = get_option('ech_lfg_kommo_status_id');
     }
 
     public function echc_KommoSendMsg()
     {
         $phone = preg_replace('/\D/', '', $_POST['phone']);
+        $msg_template = isset($_POST['msg_template']) ? $_POST['msg_template'] : '';
+        $booking_date = isset($_POST['booking_date']) && $_POST['booking_date'] != '' ? $_POST['booking_date'] : '';
+        $booking_time = isset($_POST['booking_time']) && $_POST['booking_time'] != '' ? $_POST['booking_time'] : '';
+        $booking_location = isset($_POST['booking_location']) && $_POST['booking_location'] != '' ? $_POST['booking_location'] : '';
+        $consultant = isset($_POST['consultant']) && $_POST['consultant'] != '' ? $_POST['consultant'] : '';
 
         $contact_id = $this->get_kommo_contact_by_phone($phone);
         $customer_data = [];
         if (!$contact_id) {
+
             $customer_data = [
-                'name' => $_POST['name'],
-                'first_name' => $_POST['first_name'],
-                'last_name' => $_POST['last_name'],
-                'email' => $_POST['email'],
                 'phone' => $phone,
             ];
+
             $contact_data = $this->create_kommo_contact($customer_data);
             if (isset($contact_data['error']) && $contact_data['error'] === true) {
-                echo json_encode([
-                    'error' => true,
+                wp_send_json_error([
                     'message' => $contact_data['message'],
                     'details' => $contact_data['kommo_response'],
                 ]);
-                wp_die();
             }
             $contact_id = $contact_data['_embedded']['contacts'][0]['id'];
 
         }
         $lead_data = [
-            'name' => $_POST['name'],
-            'email' => $_POST['email'],
             'phone' => $phone,
-            'team_code' => $_POST['team_code'],
-            'booking_date' => $_POST['booking_date'],
-            'booking_time' => $_POST['booking_time'],
-            'booking_item' => $_POST['booking_item'],
-            'booking_location' => $_POST['booking_location'],
-            'remarks' => $_POST['remarks'],
-            'website_url' => $_POST['website_url'],
-            'msg_template' => $_POST['wati_msg'],
+            'booking_date' => $booking_date,
+            'booking_time' => $booking_time,
+            'booking_location' => $booking_location,
+            'msg_template' => $msg_template,
         ];
-        $epayParam = '';
-        if(!empty($_POST['wati_msg']) && stripos($_POST['wati_msg'],"epay") !== false ){
-            $epayData = array(
-                "username" => $_POST['name'], 
-                "phone" => $phone, 
-                "email" => $_POST['email'], 
-                "booking_date" => $_POST['booking_date'],
-                "booking_time" => $_POST['booking_time'],
-                "booking_item" => $_POST['booking_item'],
-                "booking_location"=>$_POST['booking_location'],    
-                "website_url" => $_POST['website_url'],
-                "epay_refcode" => $_POST['epayRefCode']
-            );
-            $epayData = $this->encrypted_epay($epayData);
-            $epayParam = $epayData;
-            $lead_data['epay_url'] = $_POST['msg_button'].'?epay='.$epayData;
-        }else{
-            $lead_data['epay_url'] = $_POST['msg_button'];
-        }
         
         $create_lead = $this->create_lead($contact_id, $lead_data);
         if (isset($create_lead['error']) && $create_lead['error'] === true) {
-            echo json_encode([
-                'error' => true,
+            wp_send_json_error([
                 'message' => $create_lead['message'],
                 'details' => $create_lead['kommo_response'],
             ]);
-            wp_die();
         }
-        echo json_encode(['result' => $create_lead,'epayParam' => $epayParam,'lead_data' => $lead_data,'post'=>$_POST]);
-        wp_die();
+
+        wp_send_json_success([
+            'result' => $create_lead,
+            'send_data' => $lead_data
+        ]);
+        
 
     }
 
@@ -140,22 +122,6 @@ class Ech_consultant_Kommo_Public
 
     private function create_kommo_contact($customer_data)
     {
-
-        // $phone_field_id = null;
-        // $email_field_id = null;
-
-        // $fields = $this->get_kommo_entity_custom_fields('contacts');
-        // if (!empty($fields)) {
-        //     foreach ($fields as $key => $field) {
-        //         if ($field['code'] === 'PHONE') {
-        //             $phone_field_id = $field['id'];
-        //         }
-        //         if ($field['code'] === 'EMAIL') {
-        //             $email_field_id = $field['id'];
-        //         }
-        //     }
-        // }
-
         $contact_data = [[
             'name' => $customer_data['name'],
             'first_name' => $customer_data['first_name'],
@@ -302,8 +268,8 @@ class Ech_consultant_Kommo_Public
         $hk_time = new DateTime("now", new DateTimeZone("Asia/Hong_Kong"));
         $lead_data = [[
             "name" => "Lead Form - " . $hk_time->format("Y-m-d H:i:s"),
-            "pipeline_id" => intval(get_option('ech_consultant_kommo_pipeline_id')),
-            "status_id" => intval(get_option('ech_consultant_kommo_status_id')),
+            "pipeline_id" => $this->pipeline_id,
+            "status_id" => $this->status_id,
             "_embedded" => [
                 "contacts" => [
                     ["id" => $contact_id],
@@ -327,20 +293,6 @@ class Ech_consultant_Kommo_Public
 
     private function update_kommo_contact($contact_id, $customer_data)
     {
-        // $phone_field_id = null;
-        // $email_field_id = null;
-
-        // $field_ids = $this->get_kommo_entity_custom_fields('contacts');
-        // if (!empty($field_ids)) {
-        //     foreach ($fields as $key => $field) {
-        //         if ($field['code'] === 'PHONE') {
-        //             $phone_field_id = $field['id'];
-        //         }
-        //         if ($field['code'] === 'EMAIL') {
-        //             $email_field_id = $field['id'];
-        //         }
-        //     }
-        // }
         $update_data = [
             'name' => $customer_data['name'],
             'first_name' => $customer_data['first_name'],
@@ -363,6 +315,7 @@ class Ech_consultant_Kommo_Public
     }
     private function consultant_kommo_curl($api_link, $dataArr = null, $method = 'POST')
     {
+        $token = $this->kommo_token;
         $ch = curl_init();
 
         curl_setopt($ch, CURLOPT_URL, $api_link);
@@ -372,7 +325,7 @@ class Ech_consultant_Kommo_Public
         $headers = [];
         $headers[] = 'Accept: application/json';
         $headers[] = 'Content-Type: application/json';
-        $headers[] = 'authorization: Bearer ' . get_option('ech_lfg_kommo_token');
+        $headers[] = 'authorization: Bearer ' . $token;
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($dataArr));
@@ -384,18 +337,6 @@ class Ech_consultant_Kommo_Public
         curl_close($ch);
 
         return $result;
-    }
-
-    private function encrypted_epay($epayData){
-        $secretKey = get_option( 'ech_consultant_epay_secret_key' );
-
-        $jsonString = json_encode($epayData);
-        $compressedData = gzcompress($jsonString);
-        $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length('aes-256-cbc'));
-        $encryptedData = openssl_encrypt($compressedData, 'aes-256-cbc', $secretKey, 0, $iv);
-        $encryptedPayload = base64_encode($encryptedData . "::" . base64_encode($iv));
-
-        return $encryptedPayload;
     }
 
     private function get_kommo_entity_custom_fields($entity)
