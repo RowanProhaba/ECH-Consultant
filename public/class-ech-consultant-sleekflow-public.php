@@ -40,9 +40,7 @@ class Ech_consultant_Sleekflow_Public
 
 
     public function echc_SleekflowSendMsg() {
-        $source_type = isset($_POST['source_type']) && $_POST['source_type'] != '' ? $_POST['source_type'] : '';
-
-        
+        $source_type = isset($_POST['source_type']) && $_POST['source_type'] != '' ? $_POST['source_type'] : '';        
         $object_key = '';
         $msg_template = '';
         if(isset($_POST['msg_template']) && $_POST['msg_template'] !=''){

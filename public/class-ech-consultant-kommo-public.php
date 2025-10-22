@@ -45,7 +45,7 @@ class Ech_consultant_Kommo_Public
 
         $this->kommo_token = get_option('ech_lfg_kommo_token');
         $this->pipeline_id = get_option('ech_lfg_kommo_pipeline_id');
-        $this->status_id = get_option('ech_lfg_kommo_status_id');
+        $this->status_id = get_option('echc_kommo_status_id');
     }
 
     public function echc_KommoSendMsg()
@@ -120,6 +120,22 @@ class Ech_consultant_Kommo_Public
         return $contact;
     }
 
+    public function get_kommo_status_id_by_pipeline($pipeline_id, $status_name)
+    {
+        $contact_api = "https://{$this->subdomain}.kommo.com/api/v4/leads/pipelines/{$pipeline_id}/statuses";
+        $result = json_decode($this->consultant_kommo_curl($contact_api, null, 'GET'), true);
+        $status_id = 0;
+        if (!empty($result) && isset($result['_embedded'])) {
+            foreach ($result['_embedded']['statuses'] as $status) {
+                if($status['name'] == $status_name){
+                    $status_id = $status['id'];
+                }
+            }
+        }
+        error_log($status_id);
+        return $status_id;
+    }
+
     private function create_kommo_contact($customer_data)
     {
         $contact_data = [[
@@ -183,83 +199,40 @@ class Ech_consultant_Kommo_Public
             }
         }
 
-        $datetime = new DateTime($lead_data['booking_date'] . ' ' . $lead_data['booking_time'], new DateTimeZone('Asia/Hong_Kong'));
-        $booking_timestamp = $datetime->getTimestamp(); // Unix Timestamp
-
         $custom_fields[] = [
-            'field_code' => 'LF_NAME',
-            'values' => [
-                ['value' => $lead_data['name']],
-            ],
-        ];
-        $custom_fields[] = [
-            'field_code' => 'LF_EAMIL',
-            'values' => [
-                ['value' => $lead_data['email']],
-            ],
-        ];
-        $custom_fields[] = [
-            'field_code' => 'LF_PHONE',
+            'field_code' => 'CF_PHONE',
             'values' => [
                 ['value' => $lead_data['phone']],
             ],
         ];
+
+        $datetime = new DateTime($lead_data['booking_date'] . ' ' . $lead_data['booking_time'], new DateTimeZone('Asia/Hong_Kong'));
+        $booking_timestamp = $datetime->getTimestamp(); // Unix Timestamp
+
         $custom_fields[] = [
-            'field_code' => 'LF_CHANNEL', // Channel
-            'values' => [
-                ['value' => 'Campaign (online landing forms)'],
-            ],
-        ];
-        $custom_fields[] = [
-            'field_code' => 'LF_TEAM_CODE',
-            'values' => [
-                ['value' => $lead_data['team_code']],
-            ],
-        ];
-        $custom_fields[] = [
-            'field_code' => 'LF_BOOKING_ITEM',
-            'values' => [
-                ['value' => $lead_data['booking_item']],
-            ],
-        ];
-        $custom_fields[] = [
-            'field_code' => 'LF_BOOKING_LOCATION',
-            'values' => [
-                ['value' => $lead_data['booking_location']],
-            ],
-        ];
-        $custom_fields[] = [
-            'field_code' => 'LF_BOOKING_DATE_TIME',
+            'field_code' => 'CF_BOOKING_DATE_TIME',
             'values' => [
                 ['value' => $booking_timestamp],
             ],
         ];
 
         $custom_fields[] = [
-            'field_code' => 'LF_REMARKS',
+            'field_code' => 'CF_BOOKING_LOCATION',
             'values' => [
-                ['value' => $lead_data['remarks']],
+                ['value' => $lead_data['booking_location']],
+            ],
+        ];
+        
+
+        $custom_fields[] = [
+            'field_code' => 'CF_CONSULTANT_NAME',
+            'values' => [
+                ['value' => $lead_data['consultant_name']],
             ],
         ];
 
         $custom_fields[] = [
-            'field_code' => 'LF_WEBSITE_URL',
-            'values' => [
-                ['value' => $lead_data['website_url']],
-            ],
-        ];
-
-        if(!empty($lead_data['epay_url'])){
-            $custom_fields[] = [
-                'field_code' => 'LF_EPAY_URL',
-                'values' => [
-                    ['value' => $lead_data['epay_url']],
-                ],
-            ];
-        }
-
-        $custom_fields[] = [
-            'field_code' => 'LF_MSG_TEMPLATE',
+            'field_code' => 'CF_MSG_TEMPLATE',
             'values' => [
                 ['value' => $lead_data['msg_template']],
             ],
@@ -267,7 +240,7 @@ class Ech_consultant_Kommo_Public
 
         $hk_time = new DateTime("now", new DateTimeZone("Asia/Hong_Kong"));
         $lead_data = [[
-            "name" => "Lead Form - " . $hk_time->format("Y-m-d H:i:s"),
+            "name" => "Consultant Form - " . $hk_time->format("Y-m-d H:i:s"),
             "pipeline_id" => $this->pipeline_id,
             "status_id" => $this->status_id,
             "_embedded" => [
@@ -378,71 +351,41 @@ class Ech_consultant_Kommo_Public
 
         return $update_response;
     }
-    private function create_kommo_leads_custom_fields()
+    public function create_kommo_leads_custom_fields()
     {
         $custom_fields_api = "https://{$this->subdomain}.kommo.com/api/v4/leads/custom_fields";
         $data = [
             [
                 'type' => 'text',
-                'name' => 'Name',
-                'code' => 'LF_NAME',
-                'group_id' => 'leads_30151747629892',
-            ],
-            [
-                'type' => 'text',
-                'name' => 'Email',
-                'code' => 'LF_EAMIL',
-                'group_id' => 'leads_30151747629892',
-            ],
-            [
-                'type' => 'text',
                 'name' => 'Phone',
-                'code' => 'LF_PHONE',
-                'group_id' => 'leads_30151747629892',
-            ],
-            [
-                'type' => 'text',
-                'name' => 'Channel',
-                'code' => 'LF_CHANNEL',
-                'group_id' => 'leads_30151747629892',
-                'is_api_only' => true,
-            ],
-            [
-                'type' => 'textarea',
-                'name' => 'Enquiry item',
-                'code' => 'LF_BOOKING_ITEM',
-                'group_id' => 'leads_30151747629892',
+                'code' => 'CF_PHONE',
+                'group_id' => 'leads_19811761117471',
             ],
             [
                 'type' => 'date_time',
                 'name' => 'Booking Date & Time',
-                'code' => 'LF_BOOKING_DATE_TIME',
-                'group_id' => 'leads_30151747629892',
+                'code' => 'CF_BOOKING_DATE_TIME',
+                'group_id' => 'leads_19811761117471',
             ],
             [
                 'type' => 'text',
                 'name' => 'Booking Location',
-                'code' => 'LF_BOOKING_LOCATION',
-                'group_id' => 'leads_30151747629892',
+                'code' => 'CF_BOOKING_LOCATION',
+                'group_id' => 'leads_19811761117471',
             ],
             [
                 'type' => 'text',
-                'name' => 'Remarks',
-                'code' => 'LF_REMARKS',
-                'group_id' => 'leads_30151747629892',
+                'name' => 'Consultant Name',
+                'code' => 'CF_CONSULTANT_NAME',
+                'group_id' => 'leads_19811761117471',
             ],
             [
-                'type' => 'url',
-                'name' => 'Website URL',
-                'code' => 'LF_WEBSITE_URL',
-                'group_id' => 'leads_30151747629892',
+                'type' => 'text',
+                'name' => 'Msg Template',
+                'code' => 'CF_MSG_TEMPLATE',
+                'group_id' => 'leads_19811761117471',
             ],
-            [
-                'type' => 'url',
-                'name' => 'Epay URL',
-                'code' => 'LF_EPAY_URL',
-                'group_id' => 'leads_30151747629892',
-            ],
+
         ];
         $update_response = json_decode($this->consultant_kommo_curl($custom_fields_api, $data, 'POST'), true);
 

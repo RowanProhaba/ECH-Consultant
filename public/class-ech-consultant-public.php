@@ -166,7 +166,7 @@ class Ech_Consultant_Public
             case 'kommo':
                 $get_kommo_token = get_option('ech_lfg_kommo_token');
                 $get_kommo_pipeline_id = get_option('ech_lfg_kommo_pipeline_id');
-                $get_kommo_status_id = get_option('ech_lfg_kommo_status_id');
+                $get_kommo_status_id = get_option('echc_kommo_status_id');
                 if (empty($get_kommo_token) || empty($get_kommo_pipeline_id) || empty($get_kommo_status_id)) {
                     return '<div class="code_error">Kommo error - Kommo Token or Kommo Pipeline ID or Status ID are empty. Please setup in dashboard. </div>';
                 }

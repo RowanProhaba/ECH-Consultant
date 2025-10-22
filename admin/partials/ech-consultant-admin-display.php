@@ -24,59 +24,74 @@
     </div>
   </div>
   <div class="form_container">
-    <div class="form_row">
-      <h2>If you want to change the default settings, please visit <a href="/wp-admin/admin.php?page=reg_ech_blog_settings" target="_blank">ECH Form Settings</a></h2>
-      <?php $getMsgApi = get_option('ech_lfg_msg_api'); ?>
-      <label>Sending Message Api : </label>
-      <select name="ech_lfg_msg_api" disabled>
-          <option value="<?php echo $getMsgApi; ?>" selected><?php echo $getMsgApi; ?></option>
-      </select>
-    </div>
-    <div class="form_row">
-        <label>Brand Whatsapp Number: </label>
-        <input type="text" value="<?= htmlspecialchars(get_option('ech_lfg_brand_whatsapp'))?>" readonly />
-    </div>
-    <?php
-      switch ($getMsgApi) :
-        case 'omnichat': ?>
-          <h2>Omnichat Settings</h2>
-          <div class="form_row">
-              <label>Omnichat Token: </label>
-              <input type="text" name="ech_lfg_omnichat_token" value="<?= htmlspecialchars(get_option('ech_lfg_omnichat_token'))?> " readonly/>
-          </div>
-        <?php break;
-
-        case 'sleekflow': ?>
-          <h2>SleekFlow Settings</h2>
-          <div class="form_row">
-              <label>SleekFlow Token: </label>
-              <input type="text" name="ech_lfg_sleekflow_token" value="<?= htmlspecialchars(get_option('ech_lfg_sleekflow_token'))?> " readonly/>
-          </div>
-        <?php break;
-
-        case 'kommo': ?>
-          <h2>Kommo Settings</h2>
-          <div class="form_row">
-              <label>Kommo Token: </label>
-              <input type="text" name="ech_lfg_kommo_token" value="<?= htmlspecialchars(get_option('ech_lfg_kommo_token'))?> " readonly/>
-          </div>
-          <div class="form_row">
-              <label>Kommo Pipeline ID: </label>
-              <input type="number" name="ech_lfg_kommo_pipeline_id" value="<?= htmlspecialchars(get_option('ech_lfg_kommo_pipeline_id'))?>"/>
-          </div>
-          <div class="form_row">
-              <label>Kommo Status ID: </label>
-              <input type="number" name="ech_lfg_kommo_status_id" value="<?= htmlspecialchars(get_option('ech_lfg_kommo_status_id'))?>"/>
-          </div>
-          <?php break;
-
-      endswitch;?>
-      <form method="post" id="echc_gen_settings_form">
+    <form method="post" id="echc_gen_settings_form">
         <?php
           settings_fields('echc_gen_settings');
           do_settings_sections('echc_gen_settings');
-          
           ?>
+      <div class="form_row">
+        <h2>If you want to change the default settings, please visit <a href="/wp-admin/admin.php?page=reg_ech_blog_settings" target="_blank">ECH Form Settings</a></h2>
+        <?php $getMsgApi = get_option('ech_lfg_msg_api'); ?>
+        <label>Sending Message Api : </label>
+        <select name="ech_lfg_msg_api" disabled>
+            <option value="<?php echo $getMsgApi; ?>" selected><?php echo $getMsgApi; ?></option>
+        </select>
+      </div>
+      <div class="form_row">
+          <label>Brand Whatsapp Number: </label>
+          <input type="text" value="<?= htmlspecialchars(get_option('ech_lfg_brand_whatsapp'))?>" readonly />
+      </div>
+      <?php
+        switch ($getMsgApi) :
+          case 'omnichat': ?>
+            <h2>Omnichat Settings</h2>
+            <div class="form_row">
+                <label>Omnichat Token: </label>
+                <input type="text" value="<?= htmlspecialchars(get_option('ech_lfg_omnichat_token'))?> " readonly/>
+            </div>
+          <?php break;
+
+          case 'sleekflow': ?>
+            <h2>SleekFlow Settings</h2>
+            <div class="form_row">
+                <label>SleekFlow Token: </label>
+                <input type="text" value="<?= htmlspecialchars(get_option('ech_lfg_sleekflow_token'))?> " readonly/>
+            </div>
+          <?php break;
+
+          case 'kommo': 
+            $pipeline_id = get_option('ech_lfg_kommo_pipeline_id');
+            $status_name = get_option('echc_kommo_status_name');
+            $status_id = get_option('echc_kommo_status_id');
+            if($pipeline_id && $status_name && !$status_id){
+              $public = new Ech_consultant_Kommo_Public($this->plugin_name, $this->version);
+              $status_id = $public->get_kommo_status_id_by_pipeline($pipeline_id, $status_name);
+              add_option('echc_kommo_status_id', $status_id);
+            }
+          ?>
+          
+            <h2>Kommo Settings</h2>
+            <div class="form_row">
+                <label>Kommo Token: </label>
+                <input type="text" value="<?= htmlspecialchars(get_option('ech_lfg_kommo_token'))?> " readonly/>
+            </div>
+            <div class="form_row">
+                <label>Kommo Pipeline ID: </label>
+                <input type="number" value="<?= $pipeline_id?>" readonly/>
+            </div>
+            <div class="form_row">
+                <label>Kommo Consultant Status Name: </label>
+                <input type="text" name="echc_kommo_status_name" value="<?= $status_name;?>" <?= ($status_name)? 'readonly' : ''?>/>
+            </div>
+            <div class="form_row">
+                <label>Kommo Consultant Status ID: </label>
+                <input type="number" value="<?= $status_id;?>" readonly/>
+            </div>
+            
+            <?php break;
+
+        endswitch;?>
+      
         <div class="form_row">
             <label>Message Template: </label>
             <input type="text" name="echc_msg_template" value="<?= htmlspecialchars(get_option('echc_msg_template'))?>"/>
@@ -102,6 +117,10 @@
 
       <?php 
         endif;
+
+//         $public = new Ech_consultant_Kommo_Public($this->plugin_name, $this->version);
+//          $result = $public->create_kommo_leads_custom_fields();
+//         print_r($result);
       ?>
       
   </div>
