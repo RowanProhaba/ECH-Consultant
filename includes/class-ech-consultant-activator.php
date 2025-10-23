@@ -67,6 +67,9 @@ class Ech_Consultant_Activator
 
         // 重新刷新 permalink
         flush_rewrite_rules();
+
+        add_option('echc_kommo_status_id', '');
+
     }
 
     private static function import_acf_json()

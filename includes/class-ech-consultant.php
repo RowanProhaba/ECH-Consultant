@@ -174,6 +174,8 @@ class Ech_Consultant
         // ^^^ Register plugin settings
         $this->loader->add_action('admin_init', $plugin_admin, 'reg_ech_consultant_settings');
 
+        $this->loader->add_action('admin_init', $plugin_admin, 'init_kommo_status_id');
+
     }
 
     /**

@@ -80,9 +80,9 @@
 		$('.echc_form').on("submit", async function (e) {
 			e.preventDefault();
 			const $form = $(this);
-
+			
 			const ajaxurl = $form.data('ajaxurl'),
-				_source_type = $form.data('source-type');
+				_source_type = $form.data('source-type'),
 				_tel_prefix = $form.find("select[name='telPrefix']").val(),
 				_tel = $form.find("input[name='tel']").val(),
 				_booking_date = $form.find("input[name='booking_date']").val(),
@@ -111,7 +111,7 @@
 			}
 
 			$form.find(".echc_formMsg").html("提交中...");
-			$(".ech_echc_form button[type=submit]").prop('disabled', true).html("提交中...");
+			$form.find('button[type="submit"]').prop('disabled', true).html("提交中...");
 
 			const msgData = {
 				ajaxurl: ajaxurl,

@@ -139,15 +139,33 @@ class Ech_Consultant_Admin
         register_setting( 'echc_gen_settings', 'echc_msg_template');
         register_setting( 'echc_gen_settings', 'echc_kommo_status_name');
         register_setting( 'echc_gen_settings', 'echc_kommo_status_id');
-        // register_setting(
-        //     'echc_gen_settings',
-        //     'echc_shop_area',
-        //     [
-        //         'type' => 'array',
-        //         'default' => [],
-        //     ],
-        // );
     }
+
+    public function init_kommo_status_id() {
+        $msg_api     = get_option('ech_lfg_msg_api');
+        if ($msg_api !== 'kommo') {
+            return;
+        }
+    
+        $pipeline_id = get_option('ech_lfg_kommo_pipeline_id');
+        $status_name = get_option('echc_kommo_status_name');
+        $status_id   = get_option('echc_kommo_status_id');
+
+        if (!$pipeline_id || !$status_name) {
+            return;
+        }
+
+        if ($status_id) {
+            return;
+        }
+
+        $public = new Ech_consultant_Kommo_Public($this->plugin_name, $this->version);
+        $status_id = $public->get_kommo_status_id_by_pipeline($pipeline_id, $status_name);
+        if ($status_id) {
+            update_option('echc_kommo_status_id', $status_id);
+        }
+    }
+    
 
 
 

@@ -205,7 +205,7 @@ class Ech_Consultant_Public
         // *********** (END) Check if apply reCAPTCHA v3 ***************/
 
         $output .= '
-		<form class="echc_form" id="echc_form" action="" method="post" data-source_type="' . $source_type . '" data-shop-label="' . $shop_label . '" data-shop-count="' . $shop_count . '" data-ajaxurl="' . get_admin_url(null, 'admin-ajax.php') . '" data-ip="' . $ip . '" data-url="https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . '" data-apply-recapt="' . $apply_recapt . '" data-recapt-site-key="' . $recapt_site_key . '" data-recapt-score="' . $recapt_score . '" data-msg-send-api="' . $msg_send_api . '" data-msg-template="' . $msg_template . '" data-msg-header="' . $msg_header . '" data-msg-body="' . $msg_body . '" data-msg-button="' . $msg_button . '">
+		<form class="echc_form" id="echc_form" action="" method="post" data-source-type="' . $source_type . '" data-shop-label="' . $shop_label . '" data-shop-count="' . $shop_count . '" data-ajaxurl="' . get_admin_url(null, 'admin-ajax.php') . '" data-ip="' . $ip . '" data-url="https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . '" data-apply-recapt="' . $apply_recapt . '" data-recapt-site-key="' . $recapt_site_key . '" data-recapt-score="' . $recapt_score . '" data-msg-send-api="' . $msg_send_api . '" data-msg-template="' . $msg_template . '" data-msg-header="' . $msg_header . '" data-msg-body="' . $msg_body . '" data-msg-button="' . $msg_button . '">
 			<div class="form_row echc_formMsg"></div>
 			';
 

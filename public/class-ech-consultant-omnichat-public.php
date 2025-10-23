@@ -49,7 +49,7 @@ class Ech_consultant_Omnichat_Public
         $consultant = isset($_POST['consultant']) && $_POST['consultant'] != '' ? $_POST['consultant'] : '';
         $msg_template = isset($_POST['msg_template']) ? $_POST['msg_template'] : '';
         if($source_type){
-            $msg_template.= $msg_template.'_'.$source_type;
+            $msg_template.= '_'.$source_type;
         }
         $msg_header = isset($_POST['msg_header']) && $_POST['msg_header'] != '' ? $_POST['msg_header'] : '';
         $msg_body = isset($_POST['msg_body']) && $_POST['msg_body'] != '' ? $_POST['msg_body'] : '';
@@ -166,7 +166,7 @@ class Ech_consultant_Omnichat_Public
             }
         }else{
             if($source_type === 'landing'){
-                
+
                 $bodyComponent = [
                     'type' => 'body',
                     'parameters' => [

@@ -63,11 +63,6 @@
             $pipeline_id = get_option('ech_lfg_kommo_pipeline_id');
             $status_name = get_option('echc_kommo_status_name');
             $status_id = get_option('echc_kommo_status_id');
-            if($pipeline_id && $status_name && !$status_id){
-              $public = new Ech_consultant_Kommo_Public($this->plugin_name, $this->version);
-              $status_id = $public->get_kommo_status_id_by_pipeline($pipeline_id, $status_name);
-              add_option('echc_kommo_status_id', $status_id);
-            }
           ?>
           
             <h2>Kommo Settings</h2>
@@ -117,10 +112,6 @@
 
       <?php 
         endif;
-
-//         $public = new Ech_consultant_Kommo_Public($this->plugin_name, $this->version);
-//          $result = $public->create_kommo_leads_custom_fields();
-//         print_r($result);
       ?>
       
   </div>

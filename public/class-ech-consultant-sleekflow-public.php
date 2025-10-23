@@ -47,7 +47,7 @@ class Ech_consultant_Sleekflow_Public
             $object_key = explode('|',$_POST['msg_template'])[0];
             $msg_template = explode('|',$_POST['msg_template'])[1];
             if($source_type){
-                $msg_template.= $msg_template.'_'.$source_type;
+                $msg_template.= '_'.$source_type;
             }
         }
 

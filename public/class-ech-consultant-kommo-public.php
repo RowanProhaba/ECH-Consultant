@@ -44,14 +44,18 @@ class Ech_consultant_Kommo_Public
         $this->version = $version;
 
         $this->kommo_token = get_option('ech_lfg_kommo_token');
-        $this->pipeline_id = get_option('ech_lfg_kommo_pipeline_id');
-        $this->status_id = get_option('echc_kommo_status_id');
+        $this->pipeline_id = intval(get_option('ech_lfg_kommo_pipeline_id'));
+        $this->status_id = intval(get_option('echc_kommo_status_id'));
     }
 
     public function echc_KommoSendMsg()
     {
         $phone = preg_replace('/\D/', '', $_POST['phone']);
+        $source_type = isset($_POST['source_type']) && $_POST['source_type'] != '' ? $_POST['source_type'] : '';
         $msg_template = isset($_POST['msg_template']) ? $_POST['msg_template'] : '';
+        if($source_type){
+            $msg_template.= '_'.$source_type;
+        }
         $booking_date = isset($_POST['booking_date']) && $_POST['booking_date'] != '' ? $_POST['booking_date'] : '';
         $booking_time = isset($_POST['booking_time']) && $_POST['booking_time'] != '' ? $_POST['booking_time'] : '';
         $booking_location = isset($_POST['booking_location']) && $_POST['booking_location'] != '' ? $_POST['booking_location'] : '';
@@ -75,15 +79,26 @@ class Ech_consultant_Kommo_Public
             $contact_id = $contact_data['_embedded']['contacts'][0]['id'];
 
         }
-        $lead_data = [
-            'phone' => $phone,
-            'booking_date' => $booking_date,
-            'booking_time' => $booking_time,
-            'booking_location' => $booking_location,
-            'msg_template' => $msg_template,
-        ];
-        
+        if($source_type === 'landing'){
+            $lead_data = [
+                'phone' => $phone,
+                'booking_location' => $booking_location,
+                'consultant_name' => $consultant,
+                'msg_template' => $msg_template,
+            ];
+        }else{
+
+            $lead_data = [
+                'phone' => $phone,
+                'booking_date' => $booking_date,
+                'booking_time' => $booking_time,
+                'booking_location' => $booking_location,
+                'consultant_name' => $consultant,
+                'msg_template' => $msg_template,
+            ];
+        }
         $create_lead = $this->create_lead($contact_id, $lead_data);
+
         if (isset($create_lead['error']) && $create_lead['error'] === true) {
             wp_send_json_error([
                 'message' => $create_lead['message'],
@@ -124,7 +139,7 @@ class Ech_consultant_Kommo_Public
     {
         $contact_api = "https://{$this->subdomain}.kommo.com/api/v4/leads/pipelines/{$pipeline_id}/statuses";
         $result = json_decode($this->consultant_kommo_curl($contact_api, null, 'GET'), true);
-        $status_id = 0;
+        $status_id = '';
         if (!empty($result) && isset($result['_embedded'])) {
             foreach ($result['_embedded']['statuses'] as $status) {
                 if($status['name'] == $status_name){
@@ -132,7 +147,6 @@ class Ech_consultant_Kommo_Public
                 }
             }
         }
-        error_log($status_id);
         return $status_id;
     }
 
@@ -173,7 +187,6 @@ class Ech_consultant_Kommo_Public
 
         $fields = $this->get_kommo_entity_custom_fields('leads');
 
-
         $custom_fields = [];
         // 從 website_url 取得 UTM 和其他參數
         $query_params = [];
@@ -182,19 +195,19 @@ class Ech_consultant_Kommo_Public
             if (isset($url_parts['query'])) {
                 parse_str($url_parts['query'], $query_params);
             }
-        }
-        foreach ($fields as $field) {
-
-            if ($field['type'] === 'tracking_data' && isset($field['code'])) {
-                $tracking_code = strtolower($field['code']);
-
-                if (isset($query_params[$tracking_code])) {
-                    $custom_fields[] = [
-                        'field_code' => $field['code'],
-                        'values' => [
-                            ['value' => $query_params[$tracking_code]],
-                        ],
-                    ];
+            foreach ($fields as $field) {
+    
+                if ($field['type'] === 'tracking_data' && isset($field['code'])) {
+                    $tracking_code = strtolower($field['code']);
+    
+                    if (isset($query_params[$tracking_code])) {
+                        $custom_fields[] = [
+                            'field_code' => $field['code'],
+                            'values' => [
+                                ['value' => $query_params[$tracking_code]],
+                            ],
+                        ];
+                    }
                 }
             }
         }
@@ -206,15 +219,18 @@ class Ech_consultant_Kommo_Public
             ],
         ];
 
-        $datetime = new DateTime($lead_data['booking_date'] . ' ' . $lead_data['booking_time'], new DateTimeZone('Asia/Hong_Kong'));
-        $booking_timestamp = $datetime->getTimestamp(); // Unix Timestamp
-
-        $custom_fields[] = [
-            'field_code' => 'CF_BOOKING_DATE_TIME',
-            'values' => [
-                ['value' => $booking_timestamp],
-            ],
-        ];
+        if(isset($lead_data['booking_date']) && isset($lead_data['booking_time'])){
+            
+            $datetime = new DateTime($lead_data['booking_date'] . ' ' . $lead_data['booking_time'], new DateTimeZone('Asia/Hong_Kong'));
+            $booking_timestamp = $datetime->getTimestamp(); // Unix Timestamp
+    
+            $custom_fields[] = [
+                'field_code' => 'CF_BOOKING_DATE_TIME',
+                'values' => [
+                    ['value' => $booking_timestamp],
+                ],
+            ];
+        }
 
         $custom_fields[] = [
             'field_code' => 'CF_BOOKING_LOCATION',
@@ -252,7 +268,6 @@ class Ech_consultant_Kommo_Public
         ]];
 
         $response = json_decode($this->consultant_kommo_curl($lead_api, $lead_data), true);
-
         if (isset($response['_embedded']['leads'][0]['id'])) {
             return $response;
         } else {
@@ -260,6 +275,7 @@ class Ech_consultant_Kommo_Public
                 'error' => true,
                 'message' => 'Failed to create Kommo lead.',
                 'kommo_response' => $response,
+                'lead_data' => $lead_data,
             ];
         }
     }
@@ -351,7 +367,7 @@ class Ech_consultant_Kommo_Public
 
         return $update_response;
     }
-    public function create_kommo_leads_custom_fields()
+    private function create_kommo_leads_custom_fields()
     {
         $custom_fields_api = "https://{$this->subdomain}.kommo.com/api/v4/leads/custom_fields";
         $data = [
