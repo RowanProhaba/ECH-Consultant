@@ -13,16 +13,18 @@
 		$('#ui-datepicker-div').addClass('skiptranslate notranslate');
 
 
+
 		$('.echc_form').each(function () {
 			const $form = $(this);
 			const ajaxurl = $form.data('ajaxurl');
-			const $consultantSelect = $form.find('select[name="consultant"]');
-			const $container = $form.next('.consultant-container');
+			const $container = $form.find('.consultant-list-container');
 
-			$form.find('select[name="shop"], input[name="shop"]').on('change', async function () {
+
+			$form.find('input[name="shop"]').on('change', async function () {
+				$form.find('.location-item').removeClass('active');
+				$(this).parent().addClass('active');
 				const shopCode = $(this).val();
-				$consultantSelect.html('<option disabled="" selected="" value="">載入中...</option>');
-				$container.empty();
+				$container.html('<div class="loading-spinner"></div>');
 
 				try {
 					const res = await fetch(ajaxurl, {
@@ -35,23 +37,30 @@
 					});
 
 					const json = await res.json();
-					$consultantSelect.empty();
-
+					$container.empty();
 					if (json.success && json.data.consultants.length) {
-						$consultantSelect.append('<option disabled="" selected="" value="">*請選擇顧問</option>');
+						$container.append('<div class="consultant-list-title">請選擇顧問</div>');
 						json.data.consultants.forEach(item => {
-							$consultantSelect.append(`<option value="${item.id}">${item.name}</option>`);
+							$container.append(`
+							<div class="consultant-item">
+								<div class="consultant-img"><img src="${item.img}" alt="${item.name}"></div>
+								<h4>${item.name}</h4>
+								<h6>療程專業範疇:</h6>
+								<div>${item.description}</div>
+								<label><input type="radio" name="consultant" value="${item.id}" data-consultant-text="${item.name}">選擇此顧問</label>
+							</div>
+							`);
 						});
 					} else {
-						$consultantSelect.append(`<option disabled="" selected="" value="">${json.data?.message || '沒有符合的顧問'}</option>`);
+						$container.append(`<div>${json.data?.message || '沒有符合的顧問'}</div>`);
 					}
 				} catch (error) {
 					console.error(error);
-					$consultantSelect.html('<option disabled="" selected="" value="">載入失敗，請稍後再試。</option>');
+					$container.html('<div>載入失敗，請稍後再試。</div>');
 				}
 			});
 
-			$form.find('select[name="consultant"]').on('change', async function () {
+			$form.find('input[name="consultant"]').on('change', async function () {
 				const consultantId = $(this).val();
 				$container.html('<div class="loading-spinner"></div>');
 
@@ -87,8 +96,8 @@
 				_tel = $form.find("input[name='tel']").val(),
 				_booking_date = $form.find("input[name='booking_date']").val(),
 				_booking_time = $form.find("input[name='booking_time']").val(),
-				_booking_location = $form.find("select[name='shop'] option:selected, input[name='shop']:checked").data("shop-text-value"),
-				_consultant = $form.find("select[name='consultant'] option:selected").text(),
+				_booking_location = $form.find("input[name='shop']:checked").data('shop-text'),
+				_consultant = $form.find("input[name='consultant']:checked").data('consultant-text'),
 				_msg_api = $form.data("msg-send-api"),
 				_msg_template = $form.data("msg-template"),
 				_msg_header = $form.data("msg-header"),

@@ -8,8 +8,6 @@
 }
 
 
-
-
 /***************** MAIN FORM *****************/
 .echc_form {
   display: flex;
@@ -57,9 +55,7 @@
   flex-basis: calc( 70% - 10px);
 }
 .echc_form div[data-ech-field="booking_date"],
-.echc_form div[data-ech-field="booking_time"],
-.echc_form div[data-ech-field="shop"],
-.echc_form div[data-ech-field="shop"] ~ div[data-ech-field="consultant"]{
+.echc_form div[data-ech-field="booking_time"]{
   flex-basis: calc( (100% - 10px) / 2);
 }
 .echc_form div[data-ech-field="info_remark"] .redWord{
@@ -79,7 +75,80 @@
 .form_row .redWord, .echc_formMsg {
   color: red;
 }
+.consultant-location-list{
+  margin: 0 auto 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 35px;
+  justify-content: center;
+  align-items: center;
+}
+.location-item{
+  padding: 15px 25px;
+  color: #000;
+  border: 1px solid #000;
+  cursor: pointer;
+}
+.location-item.active{
+  color: #fff;
+  background: #000;
+}
+.location-list-title{
+  margin: 0 auto 20px;
+  text-align: center;
+  font-size: 30px;
+  letter-spacing: 0.5rem;
+}
 
+.location-item input[type="radio"], .consultant-item input[type="radio"]{
+  display: none;
+}
+
+.consultant-list-container{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+}
+.consultant-list-container .loading-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #ccc;
+  border-top-color: #1b1b1b;
+  border-radius: 50%;
+  margin: 15px auto;
+  animation: spin 0.8s linear infinite;
+}
+.consultant-list-title{
+  flex-basis: 100%;
+  margin: 0 auto 20px;
+  text-align: center;
+  font-size: 30px;
+  letter-spacing: 0.5rem;
+}
+.consultant-item{
+  flex-basis: calc( (100% - 40px) / 3);
+  
+}
+.consultant-img img{
+  width: 100%;
+  aspect-ratio: 3/4;
+  object-fit: cover;
+  object-position: center;
+}
+.consultant-item label{
+  display: block;
+  padding: 15px 25px;
+  text-align: center;
+  color: #000;
+  border: 1px solid #000;
+  cursor: pointer;
+}
+.consultant-item label.active{
+  color: #fff;
+  background: #000;
+}
 
 input[type=text], select, input[type=email], input[type=number] {
   width: 100%;
@@ -95,12 +164,13 @@ small {
 }
 
 .echc_form #submitBtn {
+  padding: 10px 0px;
   background: #0170B9;
   color: #fff;
   font-family: 'YuanTi', sans-serif;
   width: 100%;
   font-size: 17px;
-  padding: 10px 0px;
+  border:1px solid #0170B9;
 }
 .echc_form #submitBtn:hover { background: #629ac7; }
 

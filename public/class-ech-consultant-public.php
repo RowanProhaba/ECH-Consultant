@@ -84,6 +84,7 @@ class Ech_Consultant_Public
     // ^^^ ECH Consultant shortcode
     public function display_ech_consultant_form($atts)
     {
+
         $source_type = 'wts';
         if (isset($_GET['source_type']) && $_GET['source_type'] == 'landing') {
             $source_type = $_GET['source_type'];
@@ -94,38 +95,20 @@ class Ech_Consultant_Public
 
         $paraArr = shortcode_atts([
             'tel_prefix_display' => '1',			// tel_prefix_display. 0 = false, 1 = true
-            'shop' => null,											// shop
-            'shop_code' => null,								// shop MSP token
-            'shop_label' => $this->form_echolang(['*Select area','*請選擇地區','*请选择地区']),		// shop label
             'submit_label' => $this->form_echolang(['Submit','提交','提交']), 										//submit button label
-            'msg_template' => get_option( 'echc_msg_template' ),
+            'msg_template' => get_option('echc_msg_template'),
             'msg_header' => null,        				// parameters need to pass to omnichat, sleekflow, kommo api
             'msg_body' => null,									// parameters need to pass to omnichat, sleekflow, kommo api
             'msg_button' => null,								// parameters need to pass to omnichat, sleekflow, kommo api
         ], $atts);
 
 
-        if ($paraArr['shop'] == null) {
-            return '<div class="code_error">shortcode error - shop not specified</div>';
-        }
-        if ($paraArr['shop_code'] == null) {
-            return '<div class="code_error">shortcode error - shop_code not specified</div>';
-        }
-
-
-        $paraArr['shop'] = array_map('trim', str_getcsv($paraArr['shop'], ','));
-        $paraArr['shop_code'] = array_map('trim', str_getcsv($paraArr['shop_code'], ','));
-
-        if (count($paraArr['shop']) != count($paraArr['shop_code'])) {
-            return '<div class="code_error">shortcode error - shop and shop_code must be corresponding to each other</div>';
-        }
         $tel_prefix_display = htmlspecialchars(str_replace(' ', '', $paraArr['tel_prefix_display']));
         if ($tel_prefix_display == "1") {
             $is_tel_prefix_display = true;
         } else {
             $is_tel_prefix_display = false;
         }
-        $shop_label = htmlspecialchars(str_replace(' ', '', $paraArr['shop_label']));
         $submit_label = htmlspecialchars(str_replace(' ', '', $paraArr['submit_label']));
 
         // Whatsapp send
@@ -137,7 +120,7 @@ class Ech_Consultant_Public
         if (empty($msg_send_api)) {
             return '<div class="code_error">Sending Message Api error - Sending Message Api Should be choose. Please setup in dashboard. </div>';
         }
-        if (empty($msg_template) ||$msg_template == null) {
+        if (empty($msg_template) || $msg_template == null) {
             return '<div class="code_error">Whatsapp send error - Whatsapp send enabled, Message Template cannot be empty</div>';
         }
         $get_brandWtsNo = get_option('ech_lfg_brand_whatsapp');
@@ -175,22 +158,20 @@ class Ech_Consultant_Public
 
         $ip = $_SERVER['REMOTE_ADDR'];
 
-        $shop_count = count($paraArr['shop']);
-
         $output = '';
 
         // *********** Custom styling ***************/
-        if (!empty(get_option('echc_submitBtn_color')) || !empty(get_option('echc_submitBtn_hoverColor') || !empty(get_option('echc_submitBtn_text_color')) || !empty(get_option('echc_submitBtn_text_hoverColor')))) {
+        if (!empty(get_option('ech_lfg_submitBtn_color')) || !empty(get_option('ech_lfg_submitBtn_hoverColor') || !empty(get_option('ech_lfg_submitBtn_text_color')) || !empty(get_option('ech_lfg_submitBtn_text_hoverColor')))) {
             $output .= '<style>';
 
             $output .= '.echc_form #submitBtn { ';
-            (!empty(get_option('echc_submitBtn_color'))) ? $output .= 'background:' . get_option('echc_submitBtn_color') . ';' : '';
-            (!empty(get_option('echc_submitBtn_text_color'))) ? $output .= 'color:' . get_option('echc_submitBtn_text_color') . ';' : '';
+            (!empty(get_option('ech_lfg_submitBtn_color'))) ? $output .= 'background:' . get_option('ech_lfg_submitBtn_color') . ';border-color:' . get_option('ech_lfg_submitBtn_color') . ';' : '';
+            (!empty(get_option('ech_lfg_submitBtn_text_color'))) ? $output .= 'color:' . get_option('ech_lfg_submitBtn_text_color') . ';' : '';
             $output .= '}';
 
             $output .= '.echc_form #submitBtn:hover { ';
-            (!empty(get_option('echc_submitBtn_hoverColor'))) ? $output .= 'background:' . get_option('echc_submitBtn_hoverColor') . ';' : '';
-            (!empty(get_option('echc_submitBtn_text_hoverColor'))) ? $output .= 'color:' . get_option('echc_submitBtn_text_hoverColor') . ';' : '';
+            (!empty(get_option('ech_lfg_submitBtn_hoverColor'))) ? $output .= 'background:' . get_option('ech_lfg_submitBtn_hoverColor') . ';' : '';
+            (!empty(get_option('ech_lfg_submitBtn_text_hoverColor'))) ? $output .= 'color:' . get_option('ech_lfg_submitBtn_text_hoverColor') . ';border-color:' . get_option('ech_lfg_submitBtn_text_hoverColor') . ';' : '';
             $output .= '}';
 
 
@@ -204,11 +185,34 @@ class Ech_Consultant_Public
         }
         // *********** (END) Check if apply reCAPTCHA v3 ***************/
 
+        
         $output .= '
-		<form class="echc_form" id="echc_form" action="" method="post" data-source-type="' . $source_type . '" data-shop-label="' . $shop_label . '" data-shop-count="' . $shop_count . '" data-ajaxurl="' . get_admin_url(null, 'admin-ajax.php') . '" data-ip="' . $ip . '" data-url="https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . '" data-apply-recapt="' . $apply_recapt . '" data-recapt-site-key="' . $recapt_site_key . '" data-recapt-score="' . $recapt_score . '" data-msg-send-api="' . $msg_send_api . '" data-msg-template="' . $msg_template . '" data-msg-header="' . $msg_header . '" data-msg-body="' . $msg_body . '" data-msg-button="' . $msg_button . '">
-			<div class="form_row echc_formMsg"></div>
-			';
+		<form class="echc_form" id="echc_form" action="" method="post" data-source-type="' . $source_type . '" data-ajaxurl="' . get_admin_url(null, 'admin-ajax.php') . '" data-ip="' . $ip . '" data-url="https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . '" data-apply-recapt="' . $apply_recapt . '" data-recapt-site-key="' . $recapt_site_key . '" data-recapt-score="' . $recapt_score . '" data-msg-send-api="' . $msg_send_api . '" data-msg-template="' . $msg_template . '" data-msg-header="' . $msg_header . '" data-msg-body="' . $msg_body . '" data-msg-button="' . $msg_button . '">';
+        
+        // *********** Location list ***************/
+        $locations = $this->get_location();
+        if(!empty($locations)) {
+            $output .= '<style>';
+            $output .= '.location-list-title,.consultant-list-title{color:' . get_option('ech_lfg_submitBtn_color') . ';}';
+            $output .= '.location-item.active{background:' . get_option('ech_lfg_submitBtn_color') . ';border-color:' . get_option('ech_lfg_submitBtn_color') . ';}';
+            $output .= '</style>';
+            $output .= '<div class="form_row" data-ech-field="shop">';
+            $output .= '<div class="location-list-title">'.$this->form_echolang(['Select Location','選擇地區','选择地区']).'</div>';
+            $output .= '<div class="consultant-location-list">';
+            foreach ($locations as $key => $location) {
+                $output .= '<label class="location-item">'.$location;
+                $output .= '<input type="radio" name="shop" value="' . $key . '" data-shop-text="' . $location . '">';
+                $output .= '</label>';
+            }
+            $output .= '</div>';
+            $output .= '</div>';
+        }
+        // *********** (END) Location list ***************/
+        $output .= '<div class="form_row consultant-list-container" data-ech-field="consultant">';
+        
+        $output .= '</div>';
 
+        $output .= ' <div class="form_row echc_formMsg"></div>';
         //**** Tel Prefix
         if ($is_tel_prefix_display) {
             $output .= '
@@ -260,77 +264,45 @@ class Ech_Consultant_Public
 				</div>';
         }
 
-
-        //**** Location Options
-        $hide_shop_row = ($shop_count == 1) ? ' style="display:none;"' : '';
-
-        $output .= '
-			<div class="form_row" data-ech-field="shop"' . $hide_shop_row . '>';
-        if ($shop_count <= 3) {
-            // radio
-            if ($shop_count == 1) {
-                $output .= '<label class="radio_label"><input type="radio" value="' . $paraArr['shop_code'][0] . '" data-shop-text-value="' . $paraArr['shop'][0] . '" name="shop" checked onclick="return false;">' . $paraArr['shop'][0] . '</label>';
-            } else {
-                $output .= '<div>' . $shop_label . '</div>';
-                for ($i = 0; $i < $shop_count; $i++) {
-                    $output .= '<label class="radio_label"><input type="radio" value="' . $paraArr['shop_code'][$i] . '" name="shop" data-shop-text-value="' . $paraArr['shop'][$i] . '" required>' . $paraArr['shop'][$i] . '</label>';
-                }
-            }
-        } else {
-            // select
-            $output .= '
-					<select class="form-control" name="shop" id="shop" required >
-						<option disabled="" selected="" value="">' . $shop_label . '</option>';
-            for ($i = 0; $i < $shop_count; $i++) {
-                $output .= '<option value="' . $paraArr['shop_code'][$i] . '" data-shop-text-value="' . $paraArr['shop'][$i] . '">' . $paraArr['shop'][$i] . '</option>';
-            }
-            $output .= '
-					</select>';
-        }
-        $output .= '
-			</div>';
-
-        //**** (END) Location Options
-
         //**** Consultant Options
         $output .= '
         <div class="form_row" data-ech-field="consultant">
             <select class="form-control" name="consultant" id="consultant" required>';
 
-            if ($shop_count == 1) {
-                $shop_code = strtolower(trim($paraArr['shop_code'][0]));
-                $args = [
-                    'post_type' => 'ec-consultant',
-                    'tax_query' => [
-                        [
-                            'taxonomy' => 'consultant-category',
-                            'field'    => 'slug',
-                            'terms'    => $shop_code,
-                        ],
-                    ],
-                    'posts_per_page' => -1,
-                    'no_found_rows'  => true,
-                    'fields'         => 'ids',
-                ];
-                $consultant_ids = get_posts($args);
-                if (!empty($consultant_ids)) {
-                    $output .= '<option disabled="" selected="" value="">' . $this->form_echolang(['*Please Select Consultant','*請選擇顧問','*请选择顾问']) . '</option>';
-                    foreach ($consultant_ids as $cid) {
-                        $fields = get_fields($cid);
-                        $name = $this->form_echolang([$fields['name_en'], $fields['name_zh'], $fields['name_cn']]);
-                        $output .= '<option value="' . esc_attr($cid) . '">' . esc_html($name) . '</option>';
-                    }
-                } else {
-                    $output .= '<option disabled="" selected="" value="">' . $this->form_echolang(['No Consultants Found','沒有找到顧問','未找到顾问']) . '</option>';
-                }
-            }else {
-                $output .= '
-                    <option  disabled="" selected="" value="">' . $this->form_echolang(['Please Select Area First','*請先選擇地區','*请先选择地区']) . '</option>';
-            }
+        // if ($shop_count == 1) {
+        //     $shop_code = strtolower(trim($paraArr['shop_code'][0]));
+        //     $args = [
+        //         'post_type' => 'ec-consultant',
+        //         'tax_query' => [
+        //             [
+        //                 'taxonomy' => 'consultant-category',
+        //                 'field'    => 'slug',
+        //                 'terms'    => $shop_code,
+        //             ],
+        //         ],
+        //         'posts_per_page' => -1,
+        //         'no_found_rows'  => true,
+        //         'fields'         => 'ids',
+        //     ];
+        //     $consultant_ids = get_posts($args);
+        //     if (!empty($consultant_ids)) {
+        //         $output .= '<option disabled="" selected="" value="">' . $this->form_echolang(['*Please Select Consultant','*請選擇顧問','*请选择顾问']) . '</option>';
+        //         foreach ($consultant_ids as $cid) {
+        //             $fields = get_fields($cid);
+        //             $name = $this->form_echolang([$fields['name_en'], $fields['name_zh'], $fields['name_cn']]);
+        //             $output .= '<option value="' . esc_attr($cid) . '">' . esc_html($name) . '</option>';
+        //         }
+        //     } else {
+        //         $output .= '<option disabled="" selected="" value="">' . $this->form_echolang(['No Consultants Found','沒有找到顧問','未找到顾问']) . '</option>';
+        //     }
+        // } else {
+        //     $output .= '
+        //             <option  disabled="" selected="" value="">' . $this->form_echolang(['Please Select Area First','*請先選擇地區','*请先选择地区']) . '</option>';
+        // }
         $output .= '
                 </select>
         </div>';
-        
+
         //**** (END) Consultant Options
 
         //**** Submit
@@ -345,6 +317,27 @@ class Ech_Consultant_Public
         $output .= '<div class="consultant-container"></div>';
         return $output;
     } // function display_ech_consultant_form()
+
+    public function get_location(){
+        $taxonomy = 'consultant-category';
+        $terms = get_terms([
+            'taxonomy' => $taxonomy,
+            'hide_empty' => false,
+        ]);
+        $locations = [];
+        if (!empty($terms) && !is_wp_error($terms)) {
+            
+            foreach ($terms as $key => $term) {
+                $name_en = get_field('name_en', $taxonomy.'_'.$term->term_id);
+                $name_zh = get_field('name_zh', $taxonomy.'_'.$term->term_id);
+                $name_cn = get_field('name_cn', $taxonomy.'_'.$term->term_id);
+                $name = $this->form_echolang([$name_en, $name_zh, $name_cn]);
+                $locations[$term->slug]=$name;
+            }
+        }
+        return $locations;
+    }
+
     public function get_ec_consultants()
     {
         $shop = isset($_POST['shop_area_code']) ? sanitize_text_field(strtolower($_POST['shop_area_code'])) : '';
@@ -376,9 +369,21 @@ class Ech_Consultant_Public
                 $name_cn = get_post_meta($consultant_id, 'name_cn', true);
                 $name = $this->form_echolang([$name_en, $name_zh, $name_cn]);
 
+                $description_en = get_post_meta($consultant_id, 'description_en', true);
+                $description_zh = get_post_meta($consultant_id, 'description_zh', true);
+                $description_cn = get_post_meta($consultant_id, 'description_cn', true);
+                $description = $this->form_echolang([$description_en, $description_zh, $description_cn]);
+                $profile_picture = get_field('profile_picture', $consultant_id);
+                if (!empty($profile_picture)) {
+                    $profile_picture = $profile_picture['sizes']['medium_large'] ?? '';
+                }else{
+                    $profile_picture = plugin_dir_url(dirname(__FILE__)) . 'public/img/circle-user-solid-full.svg';
+                }
                 $consultants[] = [
                     'id'   => $consultant_id,
                     'name' => $name,
+                    'description' => $description,
+                    'img' => $profile_picture,
                 ];
             }
         }
@@ -410,9 +415,10 @@ class Ech_Consultant_Public
         $description = $this->form_echolang([$description_en, $description_zh, $description_cn]);
 
         $profile_picture = get_field('profile_picture', $consultant_id);
-        if(!empty($profile_picture)) {
+        if (!empty($profile_picture)) {
             $profile_picture = $profile_picture['sizes']['medium_large'] ?? '';
         }
+        
         $taxonomy = 'consultant-category';
         $terms = wp_get_post_terms($consultant_id, $taxonomy);
         $area_ary = [];
