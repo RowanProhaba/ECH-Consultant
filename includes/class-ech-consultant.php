@@ -196,9 +196,9 @@ class Ech_Consultant
 
         $this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_styles');
         $this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_scripts');
-		// ^^^ register get_ec_consultants function
-		$this->loader->add_action( 'wp_ajax_get_ec_consultants', $plugin_public, 'get_ec_consultants' );
-		$this->loader->add_action( 'wp_ajax_nopriv_get_ec_consultants', $plugin_public, 'get_ec_consultants' );
+		// ^^^ register get_consultant_list function
+		$this->loader->add_action( 'wp_ajax_get_consultant_list', $plugin_public, 'get_consultant_list' );
+		$this->loader->add_action( 'wp_ajax_nopriv_get_consultant_list', $plugin_public, 'get_consultant_list' );
 		// ^^^ register get_consultant_info function
 		$this->loader->add_action( 'wp_ajax_get_consultant_info', $plugin_public, 'get_consultant_info' );
 		$this->loader->add_action( 'wp_ajax_nopriv_get_consultant_info', $plugin_public, 'get_consultant_info' );

@@ -17,7 +17,7 @@
 		$('.echc_form').each(function () {
 			const $form = $(this);
 			const ajaxurl = $form.data('ajaxurl');
-			const $container = $form.find('.consultant-list-container');
+			const $container = $form.find('div[data-ech-field="consultant"]');
 
 
 			$form.find('input[name="shop"]').on('change', async function () {
@@ -31,26 +31,16 @@
 						method: 'POST',
 						headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
 						body: new URLSearchParams({
-							action: 'get_ec_consultants',
+							action: 'get_consultant_list',
 							shop_area_code: shopCode
 						})
 					});
 
 					const json = await res.json();
 					$container.empty();
-					if (json.success && json.data.consultants.length) {
-						$container.append('<div class="consultant-list-title">請選擇顧問</div>');
-						json.data.consultants.forEach(item => {
-							$container.append(`
-							<div class="consultant-item">
-								<div class="consultant-img"><img src="${item.img}" alt="${item.name}"></div>
-								<h4>${item.name}</h4>
-								<h6>療程專業範疇:</h6>
-								<div>${item.description}</div>
-								<label><input type="radio" name="consultant" value="${item.id}" data-consultant-text="${item.name}">選擇此顧問</label>
-							</div>
-							`);
-						});
+					if (json.success && json.data.consultant_list.length) {
+						$container.append(json.data.consultant_list);
+						
 					} else {
 						$container.append(`<div>${json.data?.message || '沒有符合的顧問'}</div>`);
 					}
@@ -61,26 +51,13 @@
 			});
 
 			$form.find('input[name="consultant"]').on('change', async function () {
-				const consultantId = $(this).val();
-				$container.html('<div class="loading-spinner"></div>');
+				const $input = $(this);
 
-				try {
-					const res = await fetch(ajaxurl, {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-						body: new URLSearchParams({
-							action: 'get_consultant_info',
-							consultant_id: consultantId
-						})
-					});
+				$form.find('.consultant-item label').text('選擇此顧問');
+				$form.find('.consultant-item').removeClass('active');
 
-					const html = await res.text();
-					$container.html(html);
-
-				} catch (error) {
-					console.error(error);
-					$container.html('<p class="error">載入失敗，請稍後再試。</p>');
-				}
+				$input.siblings('label').text('已選取');
+				$input.closest('.consultant-item').addClass('active');
 			});
 
 		});

@@ -94,7 +94,8 @@ class Ech_Consultant_Public
         $recapt_score = get_option('ech_lfg_recapt_score');
 
         $paraArr = shortcode_atts([
-            'tel_prefix_display' => '1',			// tel_prefix_display. 0 = false, 1 = true
+            'tel_prefix_display' => '0',			// tel_prefix_display. 0 = false, 1 = true
+            'last_name_required' => '1',			// last_name_required. 0 = false, 1 = true
             'submit_label' => $this->form_echolang(['Submit','提交','提交']), 										//submit button label
             'msg_template' => get_option('echc_msg_template'),
             'msg_header' => null,        				// parameters need to pass to omnichat, sleekflow, kommo api
@@ -109,6 +110,18 @@ class Ech_Consultant_Public
         } else {
             $is_tel_prefix_display = false;
         }
+
+        $last_name_required = htmlspecialchars(str_replace(' ', '', $paraArr['last_name_required']));
+		if ($last_name_required == "1") {
+			$last_name_required_bool = true;
+		} else {
+			$last_name_required_bool = false;
+		}
+        $note_phone = get_option( 'ech_lfg_note_phone' );
+		$note_whatapps_link = get_option( 'ech_lfg_note_whatapps_link' );
+		if ( empty($note_phone) || empty($note_whatapps_link) ) {
+			return '<div class="code_error">Note error - Note Phone or Whatsapp Link are empty. Please setup in dashboard. </div>';
+		}
         $submit_label = htmlspecialchars(str_replace(' ', '', $paraArr['submit_label']));
 
         // Whatsapp send
@@ -164,16 +177,21 @@ class Ech_Consultant_Public
         if (!empty(get_option('ech_lfg_submitBtn_color')) || !empty(get_option('ech_lfg_submitBtn_hoverColor') || !empty(get_option('ech_lfg_submitBtn_text_color')) || !empty(get_option('ech_lfg_submitBtn_text_hoverColor')))) {
             $output .= '<style>';
 
-            $output .= '.echc_form #submitBtn { ';
-            (!empty(get_option('ech_lfg_submitBtn_color'))) ? $output .= 'background:' . get_option('ech_lfg_submitBtn_color') . ';border-color:' . get_option('ech_lfg_submitBtn_color') . ';' : '';
-            (!empty(get_option('ech_lfg_submitBtn_text_color'))) ? $output .= 'color:' . get_option('ech_lfg_submitBtn_text_color') . ';' : '';
-            $output .= '}';
+            // $output .= '.echc_form #submitBtn { ';
+            // (!empty(get_option('ech_lfg_submitBtn_color'))) ? $output .= 'background:' . get_option('ech_lfg_submitBtn_color') . ';border-color:' . get_option('ech_lfg_submitBtn_color') . ';' : '';
+            // (!empty(get_option('ech_lfg_submitBtn_text_color'))) ? $output .= 'color:' . get_option('ech_lfg_submitBtn_text_color') . ';' : '';
+            // $output .= '}';
 
-            $output .= '.echc_form #submitBtn:hover { ';
-            (!empty(get_option('ech_lfg_submitBtn_hoverColor'))) ? $output .= 'background:' . get_option('ech_lfg_submitBtn_hoverColor') . ';' : '';
-            (!empty(get_option('ech_lfg_submitBtn_text_hoverColor'))) ? $output .= 'color:' . get_option('ech_lfg_submitBtn_text_hoverColor') . ';border-color:' . get_option('ech_lfg_submitBtn_text_hoverColor') . ';' : '';
-            $output .= '}';
+            // $output .= '.echc_form #submitBtn:hover { ';
+            // (!empty(get_option('ech_lfg_submitBtn_hoverColor'))) ? $output .= 'background:' . get_option('ech_lfg_submitBtn_hoverColor') . ';' : '';
+            // (!empty(get_option('ech_lfg_submitBtn_text_hoverColor'))) ? $output .= 'color:' . get_option('ech_lfg_submitBtn_text_hoverColor') . ';border-color:' . get_option('ech_lfg_submitBtn_text_hoverColor') . ';' : '';
+            // $output .= '}';
 
+            $output .= '.customer-info-contanier{background:' . get_option('ech_lfg_submitBtn_color') . ';}';
+            $output .= '.location-list-title,.consultant-list-title{color:' . get_option('ech_lfg_submitBtn_color') . ';}';
+            $output .= '.location-item.active{background:' . get_option('ech_lfg_submitBtn_color') . ';border-color:' . get_option('ech_lfg_submitBtn_color') . ';}';
+            $output .= '.consultant-item input[name="consultant"]:checked ~ label{background:' . get_option('ech_lfg_submitBtn_color') . ';border-color:' . get_option('ech_lfg_submitBtn_color') . ';}';
+            $output .= '.consultant-item.active::before{border-top-color:' . get_option('ech_lfg_submitBtn_color') . ';}';
 
             $output .= '</style>';
         }
@@ -191,28 +209,57 @@ class Ech_Consultant_Public
         
         // *********** Location list ***************/
         $locations = $this->get_location();
+        $init_location = '';
         if(!empty($locations)) {
-            $output .= '<style>';
-            $output .= '.location-list-title,.consultant-list-title{color:' . get_option('ech_lfg_submitBtn_color') . ';}';
-            $output .= '.location-item.active{background:' . get_option('ech_lfg_submitBtn_color') . ';border-color:' . get_option('ech_lfg_submitBtn_color') . ';}';
-            $output .= '</style>';
             $output .= '<div class="form_row" data-ech-field="shop">';
             $output .= '<div class="location-list-title">'.$this->form_echolang(['Select Location','選擇地區','选择地区']).'</div>';
             $output .= '<div class="consultant-location-list">';
+            $init_location = array_key_first($locations);
             foreach ($locations as $key => $location) {
-                $output .= '<label class="location-item">'.$location;
-                $output .= '<input type="radio" name="shop" value="' . $key . '" data-shop-text="' . $location . '">';
+                $output .= '<label class="location-item '.($key == $init_location ? 'active' : '').'">'.$location;
+                $output .= '<input type="radio" name="shop" value="' . $key . '" data-shop-text="' . $location . '" '.($key == $init_location ? 'checked' : '').'>';
                 $output .= '</label>';
             }
             $output .= '</div>';
             $output .= '</div>';
         }
         // *********** (END) Location list ***************/
-        $output .= '<div class="form_row consultant-list-container" data-ech-field="consultant">';
         
+        //**** Consultant list
+        $consultants = [];
+        $consultant_list = '';
+        if($init_location != '') {
+            $consultants = $this->get_consultants($init_location);
+            $consultant_list = $this->render_consultant_list($consultants);
+        }
+        $output .= '<div class="form_row" data-ech-field="consultant">';
+        $output .= $consultant_list;
         $output .= '</div>';
 
+        //**** (END) Consultant list
+        $output .= '<div class="customer-info-contanier form_row">';
         $output .= ' <div class="form_row echc_formMsg"></div>';
+
+
+        if ($last_name_required_bool) {
+            $output .='
+            <div class="form_row" data-ech-field="last_name">
+                <input type="text" name="last_name" id="last_name"  class="form-control"  placeholder="'.$this->form_echolang(['*Last Name','*姓氏','*姓氏']).'" pattern="[ A-Za-z\u3000\u3400-\u4DBF\u4E00-\u9FFF]{1,}"  size="40" required >
+            </div>
+            ';
+        } else {
+            $output .='
+            <div class="form_row"  data-ech-field="last_name" style="display:none;">
+                <input type="text" name="last_name" id="last_name"  class="form-control"  placeholder="*姓氏" pattern="[ A-Za-z\u3000\u3400-\u4DBF\u4E00-\u9FFF]{1,}"  size="40">
+            </div>
+            ';
+        }
+        $output .= '
+        <div class="form_row" data-ech-field="first_name">
+            <input type="text" name="first_name" id="first_name" class="form-control" placeholder="'.$this->form_echolang(['*First Name','*名字','*名字']).'" pattern="[ A-Za-z\u3000\u3400-\u4DBF\u4E00-\u9FFF]{1,}" size="40" required >
+        </div>
+        ';
+
         //**** Tel Prefix
         if ($is_tel_prefix_display) {
             $output .= '
@@ -264,46 +311,12 @@ class Ech_Consultant_Public
 				</div>';
         }
 
-        //**** Consultant Options
-        $output .= '
-        <div class="form_row" data-ech-field="consultant">
-            <select class="form-control" name="consultant" id="consultant" required>';
-
-        // if ($shop_count == 1) {
-        //     $shop_code = strtolower(trim($paraArr['shop_code'][0]));
-        //     $args = [
-        //         'post_type' => 'ec-consultant',
-        //         'tax_query' => [
-        //             [
-        //                 'taxonomy' => 'consultant-category',
-        //                 'field'    => 'slug',
-        //                 'terms'    => $shop_code,
-        //             ],
-        //         ],
-        //         'posts_per_page' => -1,
-        //         'no_found_rows'  => true,
-        //         'fields'         => 'ids',
-        //     ];
-        //     $consultant_ids = get_posts($args);
-        //     if (!empty($consultant_ids)) {
-        //         $output .= '<option disabled="" selected="" value="">' . $this->form_echolang(['*Please Select Consultant','*請選擇顧問','*请选择顾问']) . '</option>';
-        //         foreach ($consultant_ids as $cid) {
-        //             $fields = get_fields($cid);
-        //             $name = $this->form_echolang([$fields['name_en'], $fields['name_zh'], $fields['name_cn']]);
-        //             $output .= '<option value="' . esc_attr($cid) . '">' . esc_html($name) . '</option>';
-        //         }
-        //     } else {
-        //         $output .= '<option disabled="" selected="" value="">' . $this->form_echolang(['No Consultants Found','沒有找到顧問','未找到顾问']) . '</option>';
-        //     }
-        // } else {
-        //     $output .= '
-        //             <option  disabled="" selected="" value="">' . $this->form_echolang(['Please Select Area First','*請先選擇地區','*请先选择地区']) . '</option>';
-        // }
-        $output .= '
-                </select>
+        $privacyPolicyUrl = get_option( 'ech_lfg_privacy_policy' );
+        $output .= ' 
+        <div class="form_row" data-ech-field="info_remark">
+            <label for="agree"><input id="agree" type="checkbox" class="agree"  value="agreed_policy" name="info_remark[]" checked required > '.$this->form_echolang(['* I have read and agreed with the terms and conditions of <a class="ech-pp-url" href="'.$privacyPolicyUrl.'" target="_blank">Privacy Policy.</a>','*本人已閱讀並同意有關<a class="ech-pp-url" href="'.$privacyPolicyUrl.'" target="_blank">私隱政策聲明</a>','*本人已阅读并同意有关<a class="ech-pp-url" href="'.$privacyPolicyUrl.'" target="_blank">私隐政策声明</a>']).'。</label>
+            <small>'.$this->form_echolang(['*Required','*必需填寫','*必需填写']).'<br>'.$this->form_echolang(['For same day reservation, please <a href="tel:tel:'.$note_phone.'">call</a> or message us on <a class="wtsL" href="'.$note_whatapps_link.'" target="_blank">WhatsApp</a>.','當天預約請<a href="tel:'.$note_phone.'">致電</a>或透過<a class="wtsL" href="'.$note_whatapps_link.'" target="_blank">WhatsApp</a>聯繫我們。','当天预约请<a href="tel:'.$note_phone.'">致电</a>或透过<a class="wtsL" href="'.$note_whatapps_link.'" target="_blank">WhatsApp</a>联系我们。']).'</small>
         </div>';
-
-        //**** (END) Consultant Options
 
         //**** Submit
         $output .= '
@@ -311,10 +324,9 @@ class Ech_Consultant_Public
 					<button type="submit" id= "submitBtn" >' . $submit_label . '</button>
 			</div>';
         //**** (END) Submit
-
+        $output .= '</div>'; //customer info container
         $output .= '
 		</form>';
-        $output .= '<div class="consultant-container"></div>';
         return $output;
     } // function display_ech_consultant_form()
 
@@ -338,14 +350,8 @@ class Ech_Consultant_Public
         return $locations;
     }
 
-    public function get_ec_consultants()
+    public function get_consultants($shop)
     {
-        $shop = isset($_POST['shop_area_code']) ? sanitize_text_field(strtolower($_POST['shop_area_code'])) : '';
-
-        if (empty($shop)) {
-            wp_send_json_error(['message' => '缺少地區代碼']);
-        }
-
         $args = [
             'post_type' => 'ec-consultant',
             'tax_query' => [
@@ -388,67 +394,48 @@ class Ech_Consultant_Public
             }
         }
 
-        if (empty($consultants)) {
-            wp_send_json_error([
-                'message' => $this->form_echolang(['Please reselect Area','請重新選擇地區','请重新选择地区']),
-            ]);
-        }
-
-        wp_send_json_success([
-            'consultants' => $consultants,
-        ]);
+        return $consultants;
     }
 
-
-    public function get_consultant_info()
-    {
-        $consultant_id = intval($_POST['consultant_id']);
-
-        $name_en = get_post_meta($consultant_id, 'name_en', true);
-        $name_zh = get_post_meta($consultant_id, 'name_zh', true);
-        $name_cn = get_post_meta($consultant_id, 'name_cn', true);
-        $name = $this->form_echolang([$name_en, $name_zh, $name_cn]);
-
-        $description_en = get_post_meta($consultant_id, 'description_en', true);
-        $description_zh = get_post_meta($consultant_id, 'description_zh', true);
-        $description_cn = get_post_meta($consultant_id, 'description_cn', true);
-        $description = $this->form_echolang([$description_en, $description_zh, $description_cn]);
-
-        $profile_picture = get_field('profile_picture', $consultant_id);
-        if (!empty($profile_picture)) {
-            $profile_picture = $profile_picture['sizes']['medium_large'] ?? '';
-        }
-        
-        $taxonomy = 'consultant-category';
-        $terms = wp_get_post_terms($consultant_id, $taxonomy);
-        $area_ary = [];
-        if (!is_wp_error($terms) && !empty($terms)) {
-            foreach ($terms as $term) {
-                $term_fields = get_fields('consultant-category_' . $term->term_id);
-                $area_name = $this->form_echolang([$term_fields['name_en'], $term_fields['name_zh'], $term_fields['name_cn']]);
-                $area_ary[] = $area_name;
-            }
-        }
+    public function render_consultant_list($consultants){
         $output = '';
-
-        $output .= '<div class="consultant-info">';
-        $default_picture = plugin_dir_url(dirname(__FILE__)) . 'public/img/circle-user-solid-full.svg';
-        if ($profile_picture) {
-            $default_picture = $profile_picture;
+        if (!empty($consultants)) {
+            $output .= '<div class="consultant-list-container">';
+            foreach ($consultants as $consultant) {
+                $output .= '<div class="consultant-item">';
+                $output .= '<div class="consultant-info">';
+                $output .= '<div class="consultant-img"><img src="'.$consultant['img'].'" alt="'.$consultant['name'].'"></div>';
+                $output .= '<h4 class="consultant-name">'.$consultant['name'].'</h4>';
+                $output .= '<h6>'.$this->form_echolang(['Treatment professional','療程專業範疇','疗程专业范畴']).':</h6>';
+                $output .= '<p class="consultant-description">'.$consultant['description'].'</p>';
+                $output .= '</div>';
+                $output .= '<input id="consultant-'.$consultant['id'].'" type="radio" name="consultant" value="'.$consultant['id'].'" data-consultant-text="'.$consultant['name'].'">';
+                $output .= '<label for="consultant-'.$consultant['id'].'">'.$this->form_echolang(['Select','選擇此顧問','选择此顾问']);
+                $output .= '</label>';
+                $output .= '</div>';
+            }
+            $output .= '</div>';
+        }else{
+            $output .= '<div class="consultant-list-title">'.$this->form_echolang(['Please reselect area','請重新選擇地區','请重新选择地区']).'</div>';
+            $output .= '<div class="consultant-list-container">';
+            $output .= '<h6>'.$this->form_echolang(['There are no consultants in this area.','此地區沒有顧問','此地区没有顾问']).'</h6>';
+            $output .= '</div>';
         }
-        $output .= '<div class="profile-picture"><img src="' . $default_picture . '" alt="' . $name . '"></div>';
-        $output .= '<div class="consultant-detail">';
-        $output .= '<div class="">' . $this->form_echolang(['Name','姓名','姓名']) . ': ' . $name . '</div>';
-        $output .= '<div class="">' . $this->form_echolang(['Profile','簡介','简介']) . ':<br>' . $description . '</div>';
-        if (!empty($area_ary)) {
-            $output .= '<div class="consultant-area">' . $this->form_echolang(['Area','地區','地区']) . ': ' . implode('、', array_map('esc_html', $area_ary)) . '</div>';
+
+        return $output;
+    }
+    public function get_consultant_list()
+    {
+        $shop = isset($_POST['shop_area_code']) ? sanitize_text_field(strtolower($_POST['shop_area_code'])) : '';
+        if (empty($shop)) {
+            wp_send_json_error(['message' => '缺少地區代碼']);
         }
-        $output .= '</div>';
-        $output .= '</div>';
-
-
-        echo $output;
-        wp_die();
+        $consultants = $this->get_consultants($shop);
+        $consultant_list = $this->render_consultant_list($consultants);
+        
+        wp_send_json_success([
+            'consultant_list' => $consultant_list,
+        ]);
     }
 
 
