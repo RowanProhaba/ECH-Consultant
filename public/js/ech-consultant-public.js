@@ -46,7 +46,7 @@
 					}
 				} catch (error) {
 					console.error(error);
-					$container.html('<div>載入失敗，請稍後再試。</div>');
+					$container.html('<div class="consultant-list-title">載入失敗，請稍後再試。</div>');
 				}
 			});
 
