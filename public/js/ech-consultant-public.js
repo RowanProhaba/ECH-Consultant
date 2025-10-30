@@ -50,12 +50,11 @@
 				}
 			});
 
-			$form.find('input[name="consultant"]').on('change', async function () {
+			$form.on('change', 'input[name="consultant"]', function () {
 				const $input = $(this);
-
 				$form.find('.consultant-item label').text('選擇此顧問');
 				$form.find('.consultant-item').removeClass('active');
-
+			
 				$input.siblings('label').text('已選取');
 				$input.closest('.consultant-item').addClass('active');
 			});
@@ -69,6 +68,9 @@
 			
 			const ajaxurl = $form.data('ajaxurl'),
 				_source_type = $form.data('source-type'),
+				_first_name = $form.find("input[name='first_name']").val(),
+				_last_name = $form.find("input[name='last_name']").val(),
+				_name = _last_name + _first_name,
 				_tel_prefix = $form.find("select[name='telPrefix']").val(),
 				_tel = $form.find("input[name='tel']").val(),
 				_booking_date = $form.find("input[name='booking_date']").val(),
@@ -102,6 +104,9 @@
 			const msgData = {
 				ajaxurl: ajaxurl,
 				source_type: _source_type,
+				first_name: _first_name,
+				last_name: _last_name,
+				name: _name,
 				phone: _tel_prefix + _tel,
 				booking_date: _booking_date,
 				booking_time: _booking_time,
@@ -113,7 +118,6 @@
 				msg_body: _msg_body,
 				msg_button: _msg_button,
 			};
-
 			// reCaptcha
 			const applyRecapt = $form.data("apply-recapt");
 			if (applyRecapt == "1") {
@@ -151,6 +155,9 @@
 		const msgData = {
 			action: _action[data.msg_api],
 			source_type: data.source_type,
+			name: data.name,
+			first_name: data.first_name,
+			last_name: data.last_name,
 			phone: data.phone,
 			booking_date: data.booking_date,
 			booking_time: data.booking_time,
@@ -176,24 +183,24 @@
 			});
 
 			const json = await res.json();
-			console.log("response: ", json);
+			// console.log("response: ", json);
 			if (!json.success) {
 				throw new Error(json.data.message);
 			}
 			// const result = JSON.parse(json.data.result);
 			const result = json.data.result;
-			console.log(result);
+			// console.log(result);
 			const isSuccess = handlers[data.msg_api]?.(result);
 			if (!isSuccess) {
 				throw new Error(`${data.msg_api} 發送失敗`);
 			}
 			console.log(`${data.msg_api} 發送成功`);
 
-			// window.location.replace(origin + '/thanks');
+			window.location.replace(origin + '/thanks');
 		} catch (error) {
 			console.error(error);
 			alert("無法提交閣下資料，請重試");
-			// location.reload(true);
+			location.reload(true);
 		}
 	} // wtsSendMsg
 })(jQuery);

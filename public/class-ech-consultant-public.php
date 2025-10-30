@@ -123,6 +123,7 @@ class Ech_Consultant_Public
 			return '<div class="code_error">Note error - Note Phone or Whatsapp Link are empty. Please setup in dashboard. </div>';
 		}
         $submit_label = htmlspecialchars(str_replace(' ', '', $paraArr['submit_label']));
+        $disclaimer = get_option('echc_disclaimer');
 
         // Whatsapp send
         $msg_template = htmlspecialchars(str_replace(' ', '', $paraArr['msg_template'] ?? ''));
@@ -174,26 +175,18 @@ class Ech_Consultant_Public
         $output = '';
 
         // *********** Custom styling ***************/
-        if (!empty(get_option('ech_lfg_submitBtn_color')) || !empty(get_option('ech_lfg_submitBtn_hoverColor') || !empty(get_option('ech_lfg_submitBtn_text_color')) || !empty(get_option('ech_lfg_submitBtn_text_hoverColor')))) {
-            $output .= '<style>';
-
-            // $output .= '.echc_form #submitBtn { ';
-            // (!empty(get_option('ech_lfg_submitBtn_color'))) ? $output .= 'background:' . get_option('ech_lfg_submitBtn_color') . ';border-color:' . get_option('ech_lfg_submitBtn_color') . ';' : '';
-            // (!empty(get_option('ech_lfg_submitBtn_text_color'))) ? $output .= 'color:' . get_option('ech_lfg_submitBtn_text_color') . ';' : '';
-            // $output .= '}';
-
-            // $output .= '.echc_form #submitBtn:hover { ';
-            // (!empty(get_option('ech_lfg_submitBtn_hoverColor'))) ? $output .= 'background:' . get_option('ech_lfg_submitBtn_hoverColor') . ';' : '';
-            // (!empty(get_option('ech_lfg_submitBtn_text_hoverColor'))) ? $output .= 'color:' . get_option('ech_lfg_submitBtn_text_hoverColor') . ';border-color:' . get_option('ech_lfg_submitBtn_text_hoverColor') . ';' : '';
-            // $output .= '}';
-
-            $output .= '.customer-info-contanier{background:' . get_option('ech_lfg_submitBtn_color') . ';}';
-            $output .= '.location-list-title,.consultant-list-title{color:' . get_option('ech_lfg_submitBtn_color') . ';}';
-            $output .= '.location-item.active{background:' . get_option('ech_lfg_submitBtn_color') . ';border-color:' . get_option('ech_lfg_submitBtn_color') . ';}';
-            $output .= '.consultant-item input[name="consultant"]:checked ~ label{background:' . get_option('ech_lfg_submitBtn_color') . ';border-color:' . get_option('ech_lfg_submitBtn_color') . ';}';
-            $output .= '.consultant-item.active::before{border-top-color:' . get_option('ech_lfg_submitBtn_color') . ';}';
-
-            $output .= '</style>';
+        $form_primary_color = get_option('echc_primary_color');
+        if (!empty($form_primary_color)) {
+            $output .= '
+            <style>
+                .echc_form #submitBtn { background:#fff;color:' . $form_primary_color . ';border-color:' . $form_primary_color . ';}
+                .echc_form #submitBtn:not([disabled]):hover { background:' . $form_primary_color . ';color:#fff;border-color:#fff;}
+                .customer-info-contanier{background:' . $form_primary_color . ';} 
+                .location-list-title,.consultant-list-title{color:' . $form_primary_color . ';}
+                .location-item.active{background:' . $form_primary_color . ';border-color:' . $form_primary_color . ';}
+                .consultant-item input[name="consultant"]:checked ~ label{background:' . $form_primary_color . ';border-color:' . $form_primary_color . ';}
+                .consultant-item.active::before{border-top-color:' . $form_primary_color . ';} 
+            </style>';
         }
         // *********** (END) Custom styling ****************/
 
@@ -239,7 +232,6 @@ class Ech_Consultant_Public
         //**** (END) Consultant list
         $output .= '<div class="customer-info-contanier form_row">';
         $output .= ' <div class="form_row echc_formMsg"></div>';
-
 
         if ($last_name_required_bool) {
             $output .='
@@ -327,6 +319,9 @@ class Ech_Consultant_Public
         $output .= '</div>'; //customer info container
         $output .= '
 		</form>';
+        if($disclaimer){
+            $output .= '<div class="disclaimer-container"> ' . $disclaimer . '</div>';
+        }
         return $output;
     } // function display_ech_consultant_form()
 
@@ -334,7 +329,7 @@ class Ech_Consultant_Public
         $taxonomy = 'consultant-category';
         $terms = get_terms([
             'taxonomy' => $taxonomy,
-            'hide_empty' => false,
+            'hide_empty' => true,
         ]);
         $locations = [];
         if (!empty($terms) && !is_wp_error($terms)) {
@@ -401,6 +396,8 @@ class Ech_Consultant_Public
         $output = '';
         if (!empty($consultants)) {
             $output .= '<div class="consultant-list-container">';
+            $output .= '<div class="consultant-list-title">'.$this->form_echolang(['Select Consultant','選擇您的專屬美容顧問','选择您的专属美容顾问']).'</div>';
+
             foreach ($consultants as $consultant) {
                 $output .= '<div class="consultant-item">';
                 $output .= '<div class="consultant-info">';

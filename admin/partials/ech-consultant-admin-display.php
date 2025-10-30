@@ -91,6 +91,15 @@
             <label>Message Template: </label>
             <input type="text" name="echc_msg_template" value="<?= htmlspecialchars(get_option('echc_msg_template'))?>"/>
         </div>
+        <h2>Form Settings</h2>
+        <div class="form_row">
+            <label>Primary Color: </label>
+            <input type="text" name="echc_primary_color" value="<?= htmlspecialchars(get_option('echc_primary_color'))?>"/>
+        </div>
+        <div class="form_row">
+            <label>Disclaimer: </label>
+            <textarea name="echc_disclaimer" id="" cols="80" rows="10"><?= htmlspecialchars(get_option('echc_disclaimer'))?></textarea>
+        </div>
 
         <div class="form_row">
             <button type="submit"> Save </button>
@@ -112,6 +121,8 @@
 
       <?php 
         endif;
+        // $public = new Ech_consultant_Kommo_Public($this->plugin_name, $this->version);
+        // $result = $public->create_kommo_leads_custom_fields();
       ?>
       
   </div>

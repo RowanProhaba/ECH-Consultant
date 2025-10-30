@@ -37,14 +37,6 @@
   flex-basis: 100%;
   box-sizing: border-box;
 }
-/* .echc_form .form_row[style*="display:none"] {
-  display: none !important;
-  height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: none !important;
-} */
-
 
 .echc_form  div[data-ech-field="shop"]{
   max-width: 1280px;
@@ -63,15 +55,18 @@
 .echc_form  div[data-ech-field="tel"]{
   flex-basis: calc( 70% - 10px);
 }
-.echc_form  div[style*="display:none"] ~ div[data-ech-field="tel"],
+/* .echc_form  div[style*="display:none"] ~ div[data-ech-field="tel"],
 .echc_form  div[style*="display:none"] ~ div[data-ech-field="first_name"]{
   flex-basis: 100%;
-}
+} */
 .echc_form div[data-ech-field="first_name"],
 .echc_form div[data-ech-field="last_name"],
+.echc_form div[data-ech-field="tel"]{
+  flex-basis: calc( (100% - 20px) / 3);
+}
 .echc_form div[data-ech-field="booking_date"],
 .echc_form div[data-ech-field="booking_time"]{
-  flex-basis: calc( (100% - 10px) / 2);
+  flex-basis: calc( (100% - 10px) / 2) !important;
 }
 .echc_form div[data-ech-field="info_remark"]{
   color: #fff;
@@ -86,7 +81,34 @@
 .echc_form .radio_label input[type=radio] {
   margin-right: 5px; 
 }
-
+.echc_form div[data-ech-field="first_name"] input,
+.echc_form div[data-ech-field="last_name"] input,
+.echc_form div[data-ech-field="telPrefix"] select,
+.echc_form div[data-ech-field="tel"] input,
+.echc_form div[data-ech-field="booking_date"] input,
+.echc_form div[data-ech-field="booking_time"] input{
+  color: #fff;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid #fff;
+  border-radius: 0;
+}
+.echc_form div[data-ech-field="first_name"] input::placeholder,
+.echc_form div[data-ech-field="last_name"] input::placeholder,
+.echc_form div[data-ech-field="telPrefix"] select::placeholder,
+.echc_form div[data-ech-field="tel"] input::placeholder,
+.echc_form div[data-ech-field="booking_date"] input::placeholder,
+.echc_form div[data-ech-field="booking_time"] input::placeholder{
+  color: #fff;
+}
+.echc_form div[data-ech-field="first_name"] input:-internal-autofill-selected,
+.echc_form div[data-ech-field="last_name"] input:-internal-autofill-selected,
+.echc_form div[data-ech-field="telPrefix"] select:-internal-autofill-selected,
+.echc_form div[data-ech-field="tel"] input:-internal-autofill-selected,
+.echc_form div[data-ech-field="booking_date"] input:-internal-autofill-selected,
+.echc_form div[data-ech-field="booking_time"] input:-internal-autofill-selected{
+  background-color: transparent !important;
+}
 .echc_form .radio_label {
   margin-right: 15px; 
 }
@@ -98,16 +120,11 @@
 }
 .consultant-location-list{
   margin: 0 auto 40px;
-  padding: 0 4% 90px;
   display: flex;
   flex-wrap: wrap;
   gap: 35px;
   justify-content: center;
   align-items: center;
-  background-image: url('../img/consultant-location-list-bg.png');
-  background-position: bottom;
-  background-repeat: no-repeat;
-  background-size: 100%;
 }
 .location-item{
   padding: 15px 25px;
@@ -124,7 +141,7 @@
   text-align: center;
   font-size: 30px;
   font-weight: 500;
-  letter-spacing: 0.5rem;
+  letter-spacing: 0.3rem;
 }
 
 .location-item input[type="radio"], .consultant-item input[type="radio"]{
@@ -149,7 +166,6 @@ div[data-ech-field="consultant"] .loading-spinner {
   flex-wrap: wrap;
   gap: 20px;
   justify-content: center;
-  /* align-items: center; */
 }
 
 .consultant-list-title{
@@ -157,7 +173,7 @@ div[data-ech-field="consultant"] .loading-spinner {
   margin: 0 auto 20px;
   text-align: center;
   font-size: 30px;
-  letter-spacing: 0.5rem;
+  letter-spacing: 0.3rem;
 }
 .consultant-item{
   position: relative;
@@ -237,8 +253,10 @@ input[type=text], select, input[type=email], input[type=number] {
   color: #fff;
   width: 100%;
   font-size: 28px;
+  font-weight: 400;
+  letter-spacing: 0.5rem;
   border:1px solid #0170B9;
-  border-radius: 10px;
+  border-radius: 20px;
 }
 .echc_form #submitBtn:hover { background: #629ac7; }
 
@@ -283,6 +301,13 @@ input[type=text], select, input[type=email], input[type=number] {
   margin-top: -3px;
 }
 
+.disclaimer-container{
+  padding: 20px;
+  font-size: 10px;
+  line-height: 1.2;
+  color: #000;
+}
+
 
 
 @media(max-width: 768px) {
@@ -290,6 +315,13 @@ input[type=text], select, input[type=email], input[type=number] {
       flex-basis: 100% !important;
   }
   .echc_formMsg { font-size: 15px; line-height: 23px; }
+  .consultant-list-container{
+    padding: 0 4%;
+  }
+  .location-list-title,.consultant-list-title{
+    font-size: 24px;
+
+  }
   .consultant-item{
     flex-basis: calc( 50% - 10px); ;
   }
@@ -305,9 +337,7 @@ input[type=text], select, input[type=email], input[type=number] {
   .consultant-item label{
     font-size: 14px;
   }
-  .echc_form #submitBtn {
-    font-size: 45px;
-  }
+
 }
 
 

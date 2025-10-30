@@ -50,7 +50,9 @@ class Ech_consultant_Sleekflow_Public
                 $msg_template.= '_'.$source_type;
             }
         }
-
+        $name = isset($_POST['name']) && $_POST['name'] != '' ? $_POST['name'] : '';
+        $first_name = isset($_POST['first_name']) && $_POST['first_name'] != '' ? $_POST['first_name'] : '';
+        $last_name = isset($_POST['last_name']) && $_POST['last_name'] != '' ? $_POST['last_name'] : '';
         $booking_date = isset($_POST['booking_date']) && $_POST['booking_date'] != '' ? $_POST['booking_date'] : '';
         $booking_time = isset($_POST['booking_time']) && $_POST['booking_time'] != '' ? $_POST['booking_time'] : '';
         $booking_location = isset($_POST['booking_location']) && $_POST['booking_location'] != '' ? $_POST['booking_location'] : '';
@@ -67,7 +69,11 @@ class Ech_consultant_Sleekflow_Public
         if(!$customer_id){
 
             $customer_data = [
-                'phone' => $phone
+                [
+                    "firstName" => $first_name,
+                    "lastName" => $last_name,
+                    "phoneNumber" => $phone,
+                ]
             ];
 
             $customer_id = $this->consultant_sleekflow_curl(
@@ -77,20 +83,19 @@ class Ech_consultant_Sleekflow_Public
             );
 
             if (is_array($customer_id) && isset($customer_id['error'])) {
-                echo json_encode([
-                    'success' => false,
+                wp_send_json_error([
                     'message' => '無法建立 SleekFlow 聯絡人',
                     'error' => $customer_id['error'],
                     'api_response' => $customer_id['response'] ?? null,
                     'data' => $customer_id['data']
                 ]);
-                wp_die();
             }
         }
         $custom_object = [
             // 'primaryPropertyValue' => null,
             'propertyValues' => [
                 'brand' => $this->brand_name,
+                'client_name' => $name,
                 'phone' => $phone,
                 'booking_date_time' => $booking_date.' '.$booking_time,
                 'booking_location' => $booking_location,
@@ -155,6 +160,7 @@ class Ech_consultant_Sleekflow_Public
                 $bodyComponent = [
                     'type' => 'body',
                     'parameters' => [
+                        ['type' => 'text', 'text' => $name],
                         ['type' => 'text', 'text' => $booking_location],
                         ['type' => 'text', 'text' => $consultant],
                     ]
@@ -163,6 +169,7 @@ class Ech_consultant_Sleekflow_Public
                 $bodyComponent = [
                     'type' => 'body',
                     'parameters' => [
+                        ['type' => 'text', 'text' => $name],
                         ['type' => 'text', 'text' => $booking_date],
                         ['type' => 'text', 'text' => $booking_time],
                         ['type' => 'text', 'text' => $booking_location],

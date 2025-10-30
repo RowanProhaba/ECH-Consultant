@@ -132,10 +132,8 @@ class Ech_Consultant_Admin
 
     public function reg_ech_consultant_settings()
     {
-        // register_setting( 'echc_gen_settings', 'echc_submitBtn_color');
-        // register_setting( 'echc_gen_settings', 'echc_submitBtn_text_color');
-        // register_setting( 'echc_gen_settings', 'echc_submitBtn_hoverColor');
-        // register_setting( 'echc_gen_settings', 'echc_submitBtn_text_hoverColor');
+        register_setting( 'echc_gen_settings', 'echc_primary_color');
+        register_setting( 'echc_gen_settings', 'echc_disclaimer');
         register_setting( 'echc_gen_settings', 'echc_msg_template');
         register_setting( 'echc_gen_settings', 'echc_kommo_status_name');
         register_setting( 'echc_gen_settings', 'echc_kommo_status_id');

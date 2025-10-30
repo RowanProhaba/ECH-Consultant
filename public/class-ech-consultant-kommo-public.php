@@ -51,6 +51,9 @@ class Ech_consultant_Kommo_Public
     public function echc_KommoSendMsg()
     {
         $phone = preg_replace('/\D/', '', $_POST['phone']);
+        $name = isset($_POST['name']) && $_POST['name'] != '' ? $_POST['name'] : '';
+        $last_name = isset($_POST['last_name']) && $_POST['last_name'] != '' ? $_POST['last_name'] : '';
+        $first_name = isset($_POST['first_name']) && $_POST['first_name'] != '' ? $_POST['first_name'] : '';
         $source_type = isset($_POST['source_type']) && $_POST['source_type'] != '' ? $_POST['source_type'] : '';
         $msg_template = isset($_POST['msg_template']) ? $_POST['msg_template'] : '';
         if($source_type){
@@ -66,6 +69,9 @@ class Ech_consultant_Kommo_Public
         if (!$contact_id) {
 
             $customer_data = [
+                'name' => $name,
+                'first_name' => $first_name,
+                'last_name' => $last_name,
                 'phone' => $phone,
             ];
 
@@ -81,6 +87,7 @@ class Ech_consultant_Kommo_Public
         }
         if($source_type === 'landing'){
             $lead_data = [
+                'name' => $name,
                 'phone' => $phone,
                 'booking_location' => $booking_location,
                 'consultant_name' => $consultant,
@@ -89,6 +96,7 @@ class Ech_consultant_Kommo_Public
         }else{
 
             $lead_data = [
+                'name' => $name,
                 'phone' => $phone,
                 'booking_date' => $booking_date,
                 'booking_time' => $booking_time,
@@ -211,6 +219,13 @@ class Ech_consultant_Kommo_Public
                 }
             }
         }
+
+        $custom_fields[] = [
+            'field_code' => 'CF_NAME',
+            'values' => [
+                ['value' => $lead_data['name']],
+            ],
+        ];
 
         $custom_fields[] = [
             'field_code' => 'CF_PHONE',
@@ -367,10 +382,16 @@ class Ech_consultant_Kommo_Public
 
         return $update_response;
     }
-    private function create_kommo_leads_custom_fields()
+    public function create_kommo_leads_custom_fields()
     {
         $custom_fields_api = "https://{$this->subdomain}.kommo.com/api/v4/leads/custom_fields";
         $data = [
+            [
+                'type' => 'text',
+                'name' => 'Name',
+                'code' => 'CF_NAME',
+                'group_id' => 'leads_19811761117471',
+            ],
             [
                 'type' => 'text',
                 'name' => 'Phone',

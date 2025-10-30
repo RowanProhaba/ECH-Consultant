@@ -42,6 +42,7 @@ class Ech_consultant_Omnichat_Public
         $domain = get_site_url();
         $channel_id = $this->omnichat_channel;
         $source_type = isset($_POST['source_type']) && $_POST['source_type'] != '' ? $_POST['source_type'] : '';
+        $name = isset($_POST['name']) && $_POST['name'] != '' ? $_POST['name'] : '';
         $phone = preg_replace('/\D/', '', $_POST['phone']);
         $booking_date = isset($_POST['booking_date']) && $_POST['booking_date'] != '' ? $_POST['booking_date'] : '';
         $booking_time = isset($_POST['booking_time']) && $_POST['booking_time'] != '' ? $_POST['booking_time'] : '';
@@ -170,6 +171,7 @@ class Ech_consultant_Omnichat_Public
                 $bodyComponent = [
                     'type' => 'body',
                     'parameters' => [
+                        ['type' => 'text', 'text' => $name],
                         ['type' => 'text', 'text' => $booking_location],
                         ['type' => 'text', 'text' => $consultant],
                     ]
@@ -179,6 +181,7 @@ class Ech_consultant_Omnichat_Public
                 $bodyComponent = [
                     'type' => 'body',
                     'parameters' => [
+                        ['type' => 'text', 'text' => $name],
                         ['type' => 'text', 'text' => $booking_date],
                         ['type' => 'text', 'text' => $booking_time],
                         ['type' => 'text', 'text' => $booking_location],
