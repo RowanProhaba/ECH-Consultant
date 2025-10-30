@@ -173,6 +173,7 @@ div[data-ech-field="consultant"] .loading-spinner {
   margin: 0 auto 20px;
   text-align: center;
   font-size: 30px;
+  font-weight: 500;
   letter-spacing: 0.3rem;
 }
 .consultant-item{
