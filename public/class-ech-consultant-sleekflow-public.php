@@ -61,6 +61,7 @@ class Ech_consultant_Sleekflow_Public
         $msg_body = isset($_POST['msg_body']) && $_POST['msg_body'] != '' ? $_POST['msg_body'] : '';
         $msg_button = isset($_POST['msg_button']) && $_POST['msg_button'] != '' ? $_POST['msg_button'] : '';
         $phone = preg_replace('/\D/', '', $_POST['phone']);
+        
         $check_customer = $this->consultant_sleekflow_curl(
             "https://api.sleekflow.io/api/contact?limit=1&offset=0&phoneNumber={$phone}",
             'GET'
@@ -108,7 +109,6 @@ class Ech_consultant_Sleekflow_Public
             'POST',
             $custom_object
         );
-        $create_custom_objects = [];
 
         $data = array();
         $data['channel'] = "whatsappcloudapi";
@@ -210,7 +210,8 @@ class Ech_consultant_Sleekflow_Public
         
         wp_send_json_success([
             'result' => $result,
-            'send_data' => $data
+            'send_data' => $data,
+            'create_custom_objects' => $create_custom_objects
         ]);
     }
 
