@@ -177,7 +177,7 @@ div[data-ech-field="consultant"] .loading-spinner {
 }
 .consultant-item{
   position: relative;
-  flex-basis: calc( (100% - 40px) / 3);
+  flex-basis: calc( (100% - 60px) / 4);
   max-width: 300px;
   display: flex;
   flex-direction: column;
