@@ -165,7 +165,7 @@ div[data-ech-field="consultant"] .loading-spinner {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
-  justify-content: center;
+  /* justify-content: center; */
 }
 
 .consultant-list-title{
