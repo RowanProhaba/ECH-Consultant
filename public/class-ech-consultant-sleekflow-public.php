@@ -61,7 +61,7 @@ class Ech_consultant_Sleekflow_Public
         $msg_body = isset($_POST['msg_body']) && $_POST['msg_body'] != '' ? $_POST['msg_body'] : '';
         $msg_button = isset($_POST['msg_button']) && $_POST['msg_button'] != '' ? $_POST['msg_button'] : '';
         $phone = preg_replace('/\D/', '', $_POST['phone']);
-        
+
         $check_customer = $this->consultant_sleekflow_curl(
             "https://api.sleekflow.io/api/contact?limit=1&offset=0&phoneNumber={$phone}",
             'GET'
@@ -71,11 +71,17 @@ class Ech_consultant_Sleekflow_Public
 
             $customer_data = [
                 [
-                    "firstName" => $first_name,
-                    "lastName" => $last_name,
+                    // "firstName" => $first_name,
+                    // "lastName" => $last_name,
                     "phoneNumber" => $phone,
                 ]
             ];
+            if(!empty($first_name)){
+                $customer_data[0]['first_name'] = $first_name;
+            }
+            if(!empty($lastName)){
+                $customer_data[0]['lastName'] = $lastName;
+            }
 
             $customer_id = $this->consultant_sleekflow_curl(
                 "https://api.sleekflow.io/api/contact/addOrUpdate",
@@ -92,18 +98,25 @@ class Ech_consultant_Sleekflow_Public
                 ]);
             }
         }
+
+        $booking_date_time = new DateTime($booking_date . ' ' . $booking_time, new DateTimeZone('Asia/Hong_Kong'));
+        $iso8601 = $booking_date_time->format('Y-m-d\TH:i:sP');
+
         $custom_object = [
             // 'primaryPropertyValue' => null,
             'propertyValues' => [
                 'brand' => $this->brand_name,
-                'client_name' => $name,
+                // 'client_name' => $name,
                 'phone' => $phone,
-                'booking_date_time' => $booking_date.' '.$booking_time,
+                'booking_date_time' => $iso8601,
                 'booking_location' => $booking_location,
                 'consultant_name' => $consultant,
             ],
             'referencedUserProfileId' => $customer_id
         ];
+        if(!empty($name)){
+            $custom_object['propertyValues']['client_name'] = $name;
+        }
         $create_custom_objects = $this->consultant_sleekflow_curl(
             "https://api.sleekflow.io/api/customObjects/{$object_key}/records",
             'POST',
@@ -160,7 +173,7 @@ class Ech_consultant_Sleekflow_Public
                 $bodyComponent = [
                     'type' => 'body',
                     'parameters' => [
-                        ['type' => 'text', 'text' => $name],
+                        // ['type' => 'text', 'text' => $name],
                         ['type' => 'text', 'text' => $booking_location],
                         ['type' => 'text', 'text' => $consultant],
                     ]
@@ -169,7 +182,7 @@ class Ech_consultant_Sleekflow_Public
                 $bodyComponent = [
                     'type' => 'body',
                     'parameters' => [
-                        ['type' => 'text', 'text' => $name],
+                        // ['type' => 'text', 'text' => $name],
                         ['type' => 'text', 'text' => $booking_date],
                         ['type' => 'text', 'text' => $booking_time],
                         ['type' => 'text', 'text' => $booking_location],

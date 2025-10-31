@@ -95,6 +95,7 @@ class Ech_Consultant_Public
 
         $paraArr = shortcode_atts([
             'tel_prefix_display' => '0',			// tel_prefix_display. 0 = false, 1 = true
+            'name_required' => '0',					// name_required. 0 = false, 1 = true
             'last_name_required' => '1',			// last_name_required. 0 = false, 1 = true
             'submit_label' => $this->form_echolang(['Submit','提交','提交']), 										//submit button label
             'msg_template' => get_option('echc_msg_template'),
@@ -111,6 +112,12 @@ class Ech_Consultant_Public
             $is_tel_prefix_display = false;
         }
 
+        $name_required = htmlspecialchars(str_replace(' ', '', $paraArr['name_required']));
+		if ($name_required == "1") {
+			$name_required_bool = true;
+		} else {
+			$name_required_bool = false;
+		}
         $last_name_required = htmlspecialchars(str_replace(' ', '', $paraArr['last_name_required']));
 		if ($last_name_required == "1") {
 			$last_name_required_bool = true;
@@ -232,25 +239,36 @@ class Ech_Consultant_Public
         //**** (END) Consultant list
         $output .= '<div class="customer-info-contanier form_row">';
         $output .= ' <div class="form_row echc_formMsg"></div>';
+        if($name_required_bool) {
+            if ($last_name_required_bool) {
+                $output .='
+                <div class="form_row" data-ech-field="last_name">
+                    <input type="text" name="last_name" id="last_name"  class="form-control"  placeholder="'.$this->form_echolang(['*Last Name','*姓氏','*姓氏']).'" pattern="[ A-Za-z\u3000\u3400-\u4DBF\u4E00-\u9FFF]{1,}"  size="40" required >
+                </div>
+                ';
+            } else {
+                $output .='
+                <div class="form_row"  data-ech-field="last_name" style="display:none;">
+                    <input type="text" name="last_name" id="last_name"  class="form-control"  placeholder="*姓氏" pattern="[ A-Za-z\u3000\u3400-\u4DBF\u4E00-\u9FFF]{1,}"  size="40">
+                </div>
+                ';
+            }
+            $output .= '
+            <div class="form_row" data-ech-field="first_name">
+                <input type="text" name="first_name" id="first_name" class="form-control" placeholder="'.$this->form_echolang(['*First Name','*名字','*名字']).'" pattern="[ A-Za-z\u3000\u3400-\u4DBF\u4E00-\u9FFF]{1,}" size="40" required >
+            </div>
+            ';
+        }else{
+            $output .='
+                <div class="form_row"  data-ech-field="last_name" style="display:none;">
+                    <input type="text" name="last_name" id="last_name"  class="form-control"  placeholder="*姓氏" pattern="[ A-Za-z\u3000\u3400-\u4DBF\u4E00-\u9FFF]{1,}"  size="40">
+                </div>
+                <div class="form_row" data-ech-field="first_name" style="display:none;">
+                    <input type="text" name="first_name" id="first_name" class="form-control" placeholder="'.$this->form_echolang(['*First Name','*名字','*名字']).'" pattern="[ A-Za-z\u3000\u3400-\u4DBF\u4E00-\u9FFF]{1,}" size="40">
+                </div>
+                ';
 
-        if ($last_name_required_bool) {
-            $output .='
-            <div class="form_row" data-ech-field="last_name">
-                <input type="text" name="last_name" id="last_name"  class="form-control"  placeholder="'.$this->form_echolang(['*Last Name','*姓氏','*姓氏']).'" pattern="[ A-Za-z\u3000\u3400-\u4DBF\u4E00-\u9FFF]{1,}"  size="40" required >
-            </div>
-            ';
-        } else {
-            $output .='
-            <div class="form_row"  data-ech-field="last_name" style="display:none;">
-                <input type="text" name="last_name" id="last_name"  class="form-control"  placeholder="*姓氏" pattern="[ A-Za-z\u3000\u3400-\u4DBF\u4E00-\u9FFF]{1,}"  size="40">
-            </div>
-            ';
         }
-        $output .= '
-        <div class="form_row" data-ech-field="first_name">
-            <input type="text" name="first_name" id="first_name" class="form-control" placeholder="'.$this->form_echolang(['*First Name','*名字','*名字']).'" pattern="[ A-Za-z\u3000\u3400-\u4DBF\u4E00-\u9FFF]{1,}" size="40" required >
-        </div>
-        ';
 
         //**** Tel Prefix
         if ($is_tel_prefix_display) {

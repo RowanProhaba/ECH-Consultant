@@ -55,10 +55,10 @@
 .echc_form  div[data-ech-field="tel"]{
   flex-basis: calc( 70% - 10px);
 }
-/* .echc_form  div[style*="display:none"] ~ div[data-ech-field="tel"],
+.echc_form  div[style*="display:none"] ~ div[data-ech-field="tel"],
 .echc_form  div[style*="display:none"] ~ div[data-ech-field="first_name"]{
   flex-basis: 100%;
-} */
+}
 .echc_form div[data-ech-field="first_name"],
 .echc_form div[data-ech-field="last_name"],
 .echc_form div[data-ech-field="tel"]{

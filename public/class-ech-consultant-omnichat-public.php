@@ -171,7 +171,7 @@ class Ech_consultant_Omnichat_Public
                 $bodyComponent = [
                     'type' => 'body',
                     'parameters' => [
-                        ['type' => 'text', 'text' => $name],
+                        // ['type' => 'text', 'text' => $name],
                         ['type' => 'text', 'text' => $booking_location],
                         ['type' => 'text', 'text' => $consultant],
                     ]
@@ -181,7 +181,7 @@ class Ech_consultant_Omnichat_Public
                 $bodyComponent = [
                     'type' => 'body',
                     'parameters' => [
-                        ['type' => 'text', 'text' => $name],
+                        // ['type' => 'text', 'text' => $name],
                         ['type' => 'text', 'text' => $booking_date],
                         ['type' => 'text', 'text' => $booking_time],
                         ['type' => 'text', 'text' => $booking_location],

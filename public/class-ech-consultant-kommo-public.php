@@ -69,11 +69,14 @@ class Ech_consultant_Kommo_Public
         if (!$contact_id) {
 
             $customer_data = [
-                'name' => $name,
+                // 'name' => $name,
                 'first_name' => $first_name,
                 'last_name' => $last_name,
                 'phone' => $phone,
             ];
+            if(!empty($name)){
+                $customer_data['name'] = $name;
+            }
 
             $contact_data = $this->create_kommo_contact($customer_data);
             if (isset($contact_data['error']) && $contact_data['error'] === true) {
@@ -87,7 +90,7 @@ class Ech_consultant_Kommo_Public
         }
         if($source_type === 'landing'){
             $lead_data = [
-                'name' => $name,
+                // 'name' => $name,
                 'phone' => $phone,
                 'booking_location' => $booking_location,
                 'consultant_name' => $consultant,
@@ -96,7 +99,7 @@ class Ech_consultant_Kommo_Public
         }else{
 
             $lead_data = [
-                'name' => $name,
+                // 'name' => $name,
                 'phone' => $phone,
                 'booking_date' => $booking_date,
                 'booking_time' => $booking_time,
@@ -219,13 +222,14 @@ class Ech_consultant_Kommo_Public
                 }
             }
         }
-
-        $custom_fields[] = [
-            'field_code' => 'CF_NAME',
-            'values' => [
-                ['value' => $lead_data['name']],
-            ],
-        ];
+        if (!empty($lead_data['name'])) {
+            $custom_fields[] = [
+                'field_code' => 'CF_NAME',
+                'values' => [
+                    ['value' => $lead_data['name']],
+                ],
+            ];
+        }
 
         $custom_fields[] = [
             'field_code' => 'CF_PHONE',

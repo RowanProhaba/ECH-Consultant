@@ -118,6 +118,8 @@
 				msg_body: _msg_body,
 				msg_button: _msg_button,
 			};
+			// console.log(msgData);
+
 			// reCaptcha
 			const applyRecapt = $form.data("apply-recapt");
 			if (applyRecapt == "1") {
@@ -168,7 +170,6 @@
 			msg_body: data.msg_body,
 			msg_button: data.msg_button,
 		};
-
 		const handlers = {
 			omnichat: result => result.content?.messageId,
 			sleekflow: result => result.status === "Sending",
