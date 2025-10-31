@@ -130,6 +130,7 @@ class Ech_Consultant_Public
 			return '<div class="code_error">Note error - Note Phone or Whatsapp Link are empty. Please setup in dashboard. </div>';
 		}
         $submit_label = htmlspecialchars(str_replace(' ', '', $paraArr['submit_label']));
+
         $disclaimer = get_option('echc_disclaimer');
 
         // Whatsapp send
@@ -414,7 +415,7 @@ class Ech_Consultant_Public
         $output = '';
         if (!empty($consultants)) {
             $output .= '<div class="consultant-list-container">';
-            $output .= '<div class="consultant-list-title">'.$this->form_echolang(['Select Consultant','選擇您的專屬美容顧問','选择您的专属美容顾问']).'</div>';
+            $output .= '<div class="consultant-list-title">'.$this->form_echolang(['Please Select Consultant','請選擇您專屬的顧問','请选择您专属的顾问']).'</div>';
 
             foreach ($consultants as $consultant) {
                 $output .= '<div class="consultant-item">';
