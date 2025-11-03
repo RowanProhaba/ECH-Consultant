@@ -157,7 +157,7 @@
                 "label": "Description (ZH)",
                 "name": "description_zh",
                 "aria-label": "",
-                "type": "textarea",
+                "type": "wysiwyg",
                 "instructions": "",
                 "required": 0,
                 "conditional_logic": 0,
@@ -167,17 +167,18 @@
                     "id": ""
                 },
                 "default_value": "",
-                "maxlength": "",
-                "rows": "",
-                "placeholder": "",
-                "new_lines": ""
+                "allow_in_bindings": 0,
+                "tabs": "all",
+                "toolbar": "full",
+                "media_upload": 1,
+                "delay": 0
             },
             {
                 "key": "field_68edb21468cd1",
                 "label": "Description (EN)",
                 "name": "description_en",
                 "aria-label": "",
-                "type": "textarea",
+                "type": "wysiwyg",
                 "instructions": "",
                 "required": 0,
                 "conditional_logic": 0,
@@ -187,17 +188,18 @@
                     "id": ""
                 },
                 "default_value": "",
-                "maxlength": "",
-                "rows": "",
-                "placeholder": "",
-                "new_lines": ""
+                "allow_in_bindings": 0,
+                "tabs": "all",
+                "toolbar": "full",
+                "media_upload": 1,
+                "delay": 0
             },
             {
                 "key": "field_68edb22168cd2",
                 "label": "Description (CN)",
                 "name": "description_cn",
                 "aria-label": "",
-                "type": "textarea",
+                "type": "wysiwyg",
                 "instructions": "",
                 "required": 0,
                 "conditional_logic": 0,
@@ -207,10 +209,11 @@
                     "id": ""
                 },
                 "default_value": "",
-                "maxlength": "",
-                "rows": "",
-                "placeholder": "",
-                "new_lines": ""
+                "allow_in_bindings": 0,
+                "tabs": "all",
+                "toolbar": "full",
+                "media_upload": 1,
+                "delay": 0
             },
             {
                 "key": "field_68edb23868cd3",

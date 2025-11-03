@@ -437,8 +437,7 @@ class Ech_Consultant_Public
                 $output .= '<div class="consultant-info">';
                 $output .= '<div class="consultant-img"><img src="'.$consultant['img'].'" alt="'.$consultant['name'].'"></div>';
                 $output .= '<h4 class="consultant-name">'.$consultant['name'].'</h4>';
-                $output .= '<h6>'.$this->form_echolang(['Treatment professional','療程專業範疇','疗程专业范畴']).':</h6>';
-                $output .= '<p class="consultant-description">'.$consultant['description'].'</p>';
+                $output .= '<div class="consultant-description">'.$consultant['description'].'</div>';
                 $output .= '</div>';
                 $output .= '<input id="consultant-'.$consultant['id'].'" type="radio" name="consultant" value="'.$consultant['id'].'" data-consultant-text="'.$consultant['name'].'">';
                 $output .= '<label for="consultant-'.$consultant['id'].'">'.$this->form_echolang(['Select','選擇此顧問','选择此顾问']);
