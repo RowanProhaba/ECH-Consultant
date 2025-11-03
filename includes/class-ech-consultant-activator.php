@@ -31,13 +31,14 @@ class Ech_Consultant_Activator
      */
     public static function activate()
     {
-
+        
         if (! function_exists('is_plugin_active')) {
             require_once(ABSPATH . 'wp-admin/includes/plugin.php');
         }
         $has_ech_lfg = class_exists('Ech_Lfg');
         $has_acf = class_exists('ACF');
-        if (! $has_ech_lfg || ! $has_acf) {
+        $acf_version = defined('ACF_VERSION') ? ACF_VERSION : null;
+        if (! $has_ech_lfg || ! $has_acf ) {
             deactivate_plugins('ech-consultant/ech-consultant.php');
 
             $missing = [];
@@ -54,6 +55,17 @@ class Ech_Consultant_Activator
                     implode('</li><li>', $missing),
                     esc_url(admin_url('plugins.php')),
                 ),
+            );
+        }
+
+        if ( version_compare($acf_version, '6.2.0', '<') ) {
+            deactivate_plugins('ech-consultant/ech-consultant.php');
+            wp_die(
+                sprintf(
+                    '<p><strong>啟用失敗：</strong> 此外掛需要 Advanced Custom Fields Pro 版本 6.2.0 或以上。</p><p>目前版本：%s</p><p><a href="%s">&laquo; 返回外掛頁面</a></p>',
+                    esc_html($acf_version ?: '未知'),
+                    esc_url(admin_url('plugins.php'))
+                )
             );
         }
 
