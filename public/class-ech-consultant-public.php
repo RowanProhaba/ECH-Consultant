@@ -430,6 +430,9 @@ class Ech_Consultant_Public
         $title = $consultant_title ?: $this->form_echolang(['Please Select Consultant','請選擇顧問','请选择顾问']);
         if (!empty($consultants)) {
             $output .= '<div class="consultant-list-container">';
+            if(count($consultants) < 4){
+                $output .= '<style>.consultant-list-container{justify-content: center;}</style>';
+            }
             $output .= '<div class="consultant-list-title">'.$title.'</div>';
 
             foreach ($consultants as $consultant) {

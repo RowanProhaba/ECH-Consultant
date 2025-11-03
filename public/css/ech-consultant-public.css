@@ -317,6 +317,7 @@ input[type=text], select, input[type=email], input[type=number] {
   .echc_formMsg { font-size: 15px; line-height: 23px; }
   .consultant-list-container{
     padding: 0 4%;
+    justify-content: start;
   }
   .location-list-title,.consultant-list-title{
     font-size: 24px;
