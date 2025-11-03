@@ -98,10 +98,12 @@ class Ech_Consultant_Public
             'name_required' => '0',					// name_required. 0 = false, 1 = true
             'last_name_required' => '1',			// last_name_required. 0 = false, 1 = true
             'submit_label' => $this->form_echolang(['Submit','提交','提交']), 										//submit button label
+            'consultant_title' => $this->form_echolang(['Please Select Consultant','請選擇您專屬的顧問','请选择您专属的顾问']),
             'msg_template' => get_option('echc_msg_template'),
-            'msg_header' => null,        				// parameters need to pass to omnichat, sleekflow, kommo api
-            'msg_body' => null,									// parameters need to pass to omnichat, sleekflow, kommo api
-            'msg_button' => null,								// parameters need to pass to omnichat, sleekflow, kommo api
+            'msg_header' => null,        			// parameters need to pass to omnichat, sleekflow, kommo api
+            'msg_body' => null,						// parameters need to pass to omnichat, sleekflow, kommo api
+            'msg_button' => null,					// parameters need to pass to omnichat, sleekflow, kommo api
+            'fbcapi_send' => '0',					// enable or disable the fbcapi send. 0 = false, 1 = true
         ], $atts);
 
 
@@ -130,6 +132,7 @@ class Ech_Consultant_Public
 			return '<div class="code_error">Note error - Note Phone or Whatsapp Link are empty. Please setup in dashboard. </div>';
 		}
         $submit_label = htmlspecialchars(str_replace(' ', '', $paraArr['submit_label']));
+        $consultant_title = htmlspecialchars(str_replace(' ', '', $paraArr['consultant_title']));
 
         $disclaimer = get_option('echc_disclaimer');
 
@@ -177,7 +180,18 @@ class Ech_Consultant_Public
                 }
                 break;
         }
+        // FB Capi 
+        $fbcapi_send = htmlspecialchars(str_replace(' ', '', $paraArr['fbcapi_send']));
+        error_log($fbcapi_send);
+        $accept_pll = get_option( 'ech_lfg_accept_pll' );
+        if($fbcapi_send){
+            $get_pixelId = get_option( 'ech_lfg_pixel_id' );
+            $get_fbAccessToken = get_option( 'ech_lfg_fb_access_token' );
 
+            if ( empty($get_pixelId) || empty($get_fbAccessToken) ) {
+                return '<div class="code_error">FB Capi error - Pixel id or FB Access Token are empty. Please setup in dashboard. </div>';
+            }
+        }
         $ip = $_SERVER['REMOTE_ADDR'];
 
         $output = '';
@@ -206,7 +220,7 @@ class Ech_Consultant_Public
 
         
         $output .= '
-		<form class="echc_form" id="echc_form" action="" method="post" data-source-type="' . $source_type . '" data-ajaxurl="' . get_admin_url(null, 'admin-ajax.php') . '" data-ip="' . $ip . '" data-url="https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . '" data-apply-recapt="' . $apply_recapt . '" data-recapt-site-key="' . $recapt_site_key . '" data-recapt-score="' . $recapt_score . '" data-msg-send-api="' . $msg_send_api . '" data-msg-template="' . $msg_template . '" data-msg-header="' . $msg_header . '" data-msg-body="' . $msg_body . '" data-msg-button="' . $msg_button . '">';
+		<form class="echc_form" id="echc_form" action="" method="post" data-source-type="' . $source_type . '" data-consultant-title="'.$consultant_title.'" data-ajaxurl="' . get_admin_url(null, 'admin-ajax.php') . '" data-ip="' . $ip . '" data-url="https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . '" data-apply-recapt="' . $apply_recapt . '" data-recapt-site-key="' . $recapt_site_key . '" data-recapt-score="' . $recapt_score . '" data-msg-send-api="' . $msg_send_api . '" data-msg-template="' . $msg_template . '" data-msg-header="' . $msg_header . '" data-msg-body="' . $msg_body . '" data-msg-button="' . $msg_button . '" data-fbcapi-send="'. $fbcapi_send .'" data-accept-pll="'. $accept_pll .'">';
         
         // *********** Location list ***************/
         $locations = $this->get_location();
@@ -231,7 +245,7 @@ class Ech_Consultant_Public
         $consultant_list = '';
         if($init_location != '') {
             $consultants = $this->get_consultants($init_location);
-            $consultant_list = $this->render_consultant_list($consultants);
+            $consultant_list = $this->render_consultant_list($consultants, $consultant_title);
         }
         $output .= '<div class="form_row" data-ech-field="consultant">';
         $output .= $consultant_list;
@@ -411,11 +425,12 @@ class Ech_Consultant_Public
         return $consultants;
     }
 
-    public function render_consultant_list($consultants){
+    public function render_consultant_list($consultants, $consultant_title = null){
         $output = '';
+        $title = $consultant_title ?: $this->form_echolang(['Please Select Consultant','請選擇顧問','请选择顾问']);
         if (!empty($consultants)) {
             $output .= '<div class="consultant-list-container">';
-            $output .= '<div class="consultant-list-title">'.$this->form_echolang(['Please Select Consultant','請選擇您專屬的顧問','请选择您专属的顾问']).'</div>';
+            $output .= '<div class="consultant-list-title">'.$title.'</div>';
 
             foreach ($consultants as $consultant) {
                 $output .= '<div class="consultant-item">';
@@ -446,8 +461,9 @@ class Ech_Consultant_Public
         if (empty($shop)) {
             wp_send_json_error(['message' => '缺少地區代碼']);
         }
+        $consultant_title = isset($_POST['consultant_title']) ? sanitize_text_field($_POST['consultant_title']) : null;
         $consultants = $this->get_consultants($shop);
-        $consultant_list = $this->render_consultant_list($consultants);
+        $consultant_list = $this->render_consultant_list($consultants, $consultant_title);
         
         wp_send_json_success([
             'consultant_list' => $consultant_list,

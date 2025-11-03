@@ -131,6 +131,7 @@ class Ech_Consultant
         require_once plugin_dir_path(dirname(__FILE__)) . 'public/class-ech-consultant-omnichat-public.php';
         require_once plugin_dir_path(dirname(__FILE__)) . 'public/class-ech-consultant-sleekflow-public.php';
         require_once plugin_dir_path(dirname(__FILE__)) . 'public/class-ech-consultant-kommo-public.php';
+        require_once plugin_dir_path(dirname(__FILE__)) . 'public/class-ech-consultant-fb-capi-public.php';
         $this->loader = new Ech_Consultant_Loader();
 
     }
@@ -193,6 +194,7 @@ class Ech_Consultant
 		$echc_omnichat_public = new Ech_consultant_Omnichat_Public( $this->get_plugin_name(), $this->get_version() );
 		$echc_sleekflow_public = new Ech_consultant_Sleekflow_Public( $this->get_plugin_name(), $this->get_version() );
 		$echc_kommo_public = new Ech_consultant_Kommo_Public( $this->get_plugin_name(), $this->get_version() );
+		$echc_fb_capi_public = new Ech_consultant_Fb_Capi_Public( $this->get_plugin_name(), $this->get_version() );
 
         $this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_styles');
         $this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_scripts');
@@ -214,6 +216,10 @@ class Ech_Consultant
 		// ^^^ register Kommo functions
 		$this->loader->add_action( 'wp_ajax_echc_KommoSendMsg', $echc_kommo_public, 'echc_KommoSendMsg' );
 		$this->loader->add_action( 'wp_ajax_nopriv_echc_KommoSendMsg', $echc_kommo_public, 'echc_KommoSendMsg' );
+
+        // ^^^ register FB Lead CAPI
+        $this->loader->add_action( 'wp_ajax_echc_FBCapi', $echc_fb_capi_public, 'echc_FBCapi' );
+        $this->loader->add_action( 'wp_ajax_nopriv_echc_FBCapi', $echc_fb_capi_public, 'echc_FBCapi' );
 
         // ^^^ Add shortcodes
         $this->loader->add_shortcode('ech_consultant', $plugin_public, 'display_ech_consultant_form');

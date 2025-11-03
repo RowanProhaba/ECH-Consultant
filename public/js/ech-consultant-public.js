@@ -15,10 +15,10 @@
 
 
 		$('.echc_form').each(function () {
-			const $form = $(this);
-			const ajaxurl = $form.data('ajaxurl');
-			const $container = $form.find('div[data-ech-field="consultant"]');
-
+			const $form = $(this),
+						ajaxurl = $form.data('ajaxurl'),
+						consultantTitle = $form.data('consultant-title'),
+						$container = $form.find('div[data-ech-field="consultant"]');
 
 			$form.find('input[name="shop"]').on('change', async function () {
 				$form.find('.location-item').removeClass('active');
@@ -32,7 +32,8 @@
 						headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
 						body: new URLSearchParams({
 							action: 'get_consultant_list',
-							shop_area_code: shopCode
+							shop_area_code: shopCode,
+							consultant_title: consultantTitle
 						})
 					});
 
@@ -65,7 +66,6 @@
 		$('.echc_form').on("submit", async function (e) {
 			e.preventDefault();
 			const $form = $(this);
-			
 			const ajaxurl = $form.data('ajaxurl'),
 				_source_type = $form.data('source-type'),
 				_first_name = $form.find("input[name='first_name']").val(),
@@ -73,6 +73,7 @@
 				_name = _last_name + _first_name,
 				_tel_prefix = $form.find("select[name='telPrefix']").val(),
 				_tel = $form.find("input[name='tel']").val(),
+				_phone = _tel_prefix + _tel,
 				_booking_date = $form.find("input[name='booking_date']").val(),
 				_booking_time = $form.find("input[name='booking_time']").val(),
 				_booking_location = $form.find("input[name='shop']:checked").data('shop-text'),
@@ -81,7 +82,10 @@
 				_msg_template = $form.data("msg-template"),
 				_msg_header = $form.data("msg-header"),
 				_msg_body = $form.data("msg-body"),
-				_msg_button = $form.data("msg-button");
+				_msg_button = $form.data("msg-button"),
+				_fbcapi_send = $form.data("fbcapi-send"),
+				_acceptPll = $form.data("accept-pll"),
+				_user_ip = $form.data("ip");
 
 			if ((_tel_prefix === "+852" && _tel.length !== 8) || (_tel_prefix === "+853" && _tel.length !== 8)) {
 				$form.find(".echc_formMsg").html("+852, +853電話必需8位數字(沒有空格)");
@@ -107,7 +111,7 @@
 				first_name: _first_name,
 				last_name: _last_name,
 				name: _name,
-				phone: _tel_prefix + _tel,
+				phone: _phone,
 				booking_date: _booking_date,
 				booking_time: _booking_time,
 				booking_location: _booking_location,
@@ -136,11 +140,17 @@
 
 						const recaptObj = await recaptRes.json();
 						if (recaptObj.success && recaptObj.score >= recaptScore) {
+							if(_fbcapi_send == "1"){
+								echcFBCapiSend(ajaxurl, _acceptPll, _phone, _first_name, _last_name, _user_ip);
+							}
 							wtsSendMsg(msgData);
 						}
 					});
 				});
 			} else {
+				if(_fbcapi_send == "1"){
+					echcFBCapiSend(ajaxurl, _acceptPll, _phone, _first_name, _last_name, _user_ip);
+				}
 				wtsSendMsg(msgData);
 			}
 		});
@@ -196,12 +206,86 @@
 				throw new Error(`${data.msg_api} 發送失敗`);
 			}
 			console.log(`${data.msg_api} 發送成功`);
-
+	
 			window.location.replace(origin + '/thanks');
+	
 		} catch (error) {
 			console.error(error);
 			alert("無法提交閣下資料，請重試");
 			location.reload(true);
 		}
 	} // wtsSendMsg
+
+	async function echcFBCapiSend(_ajaxurl, _acceptPll, _phone, _fn, _ln, _user_ip) {
+		const _website_url_no_para = location.origin + location.pathname;
+		const _event_id = Date.now(); // unique event ID
+		const _currnetUrl = window.location.href;
+		let _fbp = getCookieValue('_fbp'),
+				_external_id = getCookieValue('_fbuuid'),
+				_fbc = getCookieValue('_fbc');
+	
+		if (_fbc == null) {
+			const urlParams = new URLSearchParams(_currnetUrl);
+			const fbclid = urlParams.get('fbclid');
+			if (fbclid) {
+				_fbc = 'fb.1.' + pageEnterTime + '.' + _fbc;
+			}
+		}
+
+		const fb_data = {
+			action: 'echc_FBCapi',
+			website_url: _website_url_no_para,
+			user_agent: navigator.userAgent,
+			user_phone: _phone,
+			user_fn: _fn,
+			user_ln: _ln,
+			event_id: _event_id,
+			fbp: _fbp,
+			fbc: _fbc,
+			accept_pll: _acceptPll,
+			external_id: _external_id,
+			user_ip: _user_ip
+		};
+		console.log(fb_data);
+		// ---- send to Meta Pixel front-end ----
+		if (_acceptPll) {
+			fbq('trackCustom', 'Consultant', { event_source_url: _website_url_no_para }, { eventID: 'Consultant' + _event_id, external_id: _external_id });
+			fbq('track', 'Purchase', { value: 0.00, currency: 'HKD' }, { eventID: 'Purchase' + _event_id });
+			fbq('track', 'CompleteRegistration', {}, { eventID: 'CompleteRegistration' + _event_id });
+		} else {
+			fbq('trackCustom', 'ConsultantWithoutPII', { event_source_url: _website_url_no_para }, { eventID: 'Consultant' + _event_id, external_id: _external_id });
+			fbq('trackCustom', 'PurchaseWithoutPII', { value: 0.00, currency: 'HKD', event_source_url: _website_url_no_para }, { eventID: 'Purchase' + _event_id, external_id: _external_id });
+			fbq('trackCustom', 'CompleteRegistrationWithoutPII', { event_source_url: _website_url_no_para }, { eventID: 'CompleteRegistration' + _event_id, external_id: _external_id });
+		}
+	
+		try {
+			const res = await fetch(_ajaxurl, {
+				method: "POST",
+				headers: { "Content-Type": "application/x-www-form-urlencoded" },
+				body: new URLSearchParams(fb_data)
+			});
+			const json = await res.json();
+			if (!json.success) {
+				throw new Error(json.data.message);
+			}
+			// const result = JSON.parse(json.data.result);
+			const result = json.data.result;
+	
+			Object.keys(result).forEach(eventName => {
+				const event = result[eventName];
+				if (event.hasOwnProperty("events_received")) {
+					console.log(`${eventName}: ${event.events_received}`);
+				} else {
+					console.log(eventName, event);
+				}
+			});
+		} catch (error) {
+			console.error("FBCapi request failed:", error);
+		}
+	}
+	
+
+
+
+
 })(jQuery);
