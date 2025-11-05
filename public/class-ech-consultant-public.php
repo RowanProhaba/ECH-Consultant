@@ -182,7 +182,6 @@ class Ech_Consultant_Public
         }
         // FB Capi 
         $fbcapi_send = htmlspecialchars(str_replace(' ', '', $paraArr['fbcapi_send']));
-        error_log($fbcapi_send);
         $accept_pll = get_option( 'ech_lfg_accept_pll' );
         if($fbcapi_send){
             $get_pixelId = get_option( 'ech_lfg_pixel_id' );
